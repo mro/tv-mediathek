@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+   xmlns:dataview="http://www.w3.org/2003/g/data-view#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <rdf:Description rdf:about="tv-mediathek.rdf">
+    <dc:description xml:lang="en">Turn video Atom XML into RDF.
+
+- do as shown in http://www.w3.org/TR/grddl-tests/#sq2
+- use a (relative, cough) namespace that points to a rdf: &lt;../../../../../assets/2013/radio-pi.rdf&gt;
+- make that rdf point to a xslt,
+- make that xslt return a per-broadcast rdf,
+- test like $ rapper -i grddl -o turtle http://example.com/ard.de/2013/06/13/060500-123.atom
+</dc:description>
+    <dc:subject rdf:resource="http://purl.mro.name/tv-mediathek/"/>
+    <!-- dc:conformsTo rdf:resource="http://purl.mro.name/radio-pi/pbmi2003-recmod2012/broadcast.rng"/ -->
+    <dataview:namespaceTransformation rdf:resource="entry2rdf.xslt"/>
+  </rdf:Description>
+</rdf:RDF>

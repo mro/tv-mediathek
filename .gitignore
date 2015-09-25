@@ -1,0 +1,3 @@
+*/*.opml*
+*/opml.rng
+ard/bin/create-feeds-opml.settings

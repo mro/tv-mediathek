@@ -23,8 +23,8 @@
 #
 
 # Check preliminaries
-curl --version >/dev/null     || { echo "I need curl." && exit 1; }
-python --version > /dev/null  || { echo "I need python." && exit 1; }
+curl --version >/dev/null         || { echo "I need curl." && exit 1; }
+python --version > /dev/null 2>&1 || { echo "I need python." && exit 1; }
 
 script="$(dirname "$0")/$(basename "$0" .sh).py"
 script_url="https://raw.githubusercontent.com/axet/json2xml/master/json2xml.py"
@@ -33,4 +33,4 @@ script_url="https://raw.githubusercontent.com/axet/json2xml/master/json2xml.py"
 || curl --location --output "$script" --time-cond "$script" --remote-time --url "$script_url" \
 || { echo "Failed to download mandatory helper python script from $script_url" && exit 1; }
 
-python "$script" -r video
+python "$script" $@

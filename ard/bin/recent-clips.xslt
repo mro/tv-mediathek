@@ -23,22 +23,23 @@
 --> 
 <!--
 
-  $ xsltproc - -html bin/last-movies.xslt "http://programm.ard.de/TV/ARD-Mediathek/Programmkalender/"
+  $ xsltproc - -html bin/recent-clips.xslt "http://www.ardmediathek.de/tv/sendungVerpasst?tag=0"
   
   return url + title per line
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:output method="text"/>
   <xsl:template match="/">
-    <!-- xsl:for-each select="/html/body//div[contains(@class, ' modSender ')]//div[@class='entry active']/a">
+    <xsl:variable name="station_name" select="normalize-space(/html/body//div[contains(@class, ' modSender ')]//div[@class='entry active']/a/text()[2])"/>
+    <!-- 
       <xsl:text>- </xsl:text>
       <xsl:text>. </xsl:text>
-      <xsl:value-of select="normalize-space(./text()[2])"/><xsl:text>&#10;</xsl:text>
-    </xsl:for-each -->
+      <xsl:value-of select="$station_name"/><xsl:text>&#10;</xsl:text>
+    -->
     <xsl:for-each select="/html/body//div[@class='teaser' and ../../../h3//span/@class='date']">
       <xsl:value-of select="normalize-space(../../../h3//span[@class='date'])"/><xsl:text> </xsl:text>
       <xsl:value-of select=".//a[@class='textLink']/@href"/><xsl:text> </xsl:text>
-      <xsl:value-of select="normalize-space(../../../h3//span[@class='titel'])"/><xsl:text>&#10;</xsl:text>
+      <xsl:value-of select="normalize-space(.//h4[@class='headline'])"/><xsl:text>&#10;</xsl:text>
     </xsl:for-each>
   </xsl:template>
 </xsl:stylesheet>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  
+  Copyright (c) 2015, Marcus Rohrmoser mobile Software
+  All rights reserved.
+  
+  Redistribution and use in source and binary forms, with or without modification, are permitted
+  provided that the following conditions are met:
+  
+  1. Redistributions of source code must retain the above copyright notice, this list of conditions
+  and the following disclaimer.
+  
+  2. The software must not be used for military or intelligence or related purposes nor
+  anything that's in conflict with human rights as declared in http://www.un.org/en/documents/udhr/ .
+  
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+  FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+  THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  
+  
+  $ trang bin/media-json.rnc bin/media-json.rng && xmllint - -relaxng bin/media-json.rng - -noout ????/??/??/*.xml && trang bin/media-json.rng bin/media-json.rnc
+  
+-->
+<grammar ns="" xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0" xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <a:documentation>RelaxNG schema for xml output of 
+
+curl http://www.ardmediathek.de/play/media/30734544 | sh bin/json2xml.sh -r video
+
+This schema is overly strict to fail early and catch data changes.</a:documentation>
+    <element name="video">
+      <oneOrMore>
+        <element name="_sortierArray">
+          <choice>
+            <value>0</value>
+            <value>1</value>
+          </choice>
+        </element>
+      </oneOrMore>
+      <element name="_type">
+        <value>video</value>
+      </element>
+      <element name="_subtitleOffset">
+        <value>0</value>
+      </element>
+      <element name="_geoblocked">
+        <ref name="boolean_value"/>
+      </element>
+      <element name="_dvrEnabled">
+        <ref name="boolean_value"/>
+      </element>
+      <oneOrMore>
+        <element name="_mediaArray">
+          <element name="_plugin">
+            <choice>
+              <value>0</value>
+              <value>1</value>
+            </choice>
+          </element>
+          <oneOrMore>
+            <element name="_mediaStreamArray">
+              <optional>
+                <element name="_cdn">
+                  <choice>
+                    <value>akamai</value>
+                    <value>default</value>
+                  </choice>
+                </element>
+                <element name="_server">
+                  <empty/>
+                </element>
+              </optional>
+              <oneOrMore>
+                <choice>
+                  <element name="_quality">
+                    <ref name="quality_value"/>
+                  </element>
+                  <element name="_stream">
+                    <data type="anyURI"/>
+                  </element>
+                </choice>
+              </oneOrMore>
+            </element>
+          </oneOrMore>
+        </element>
+      </oneOrMore>
+      <element name="_duration">
+        <a:documentation>seconds</a:documentation>
+        <data type="unsignedShort"/>
+      </element>
+      <element name="_previewImage">
+        <data type="anyURI"/>
+      </element>
+      <optional>
+        <element name="_subtitleUrl">
+          <data type="anyURI"/>
+        </element>
+      </optional>
+      <element name="_isLive">
+        <ref name="boolean_value"/>
+      </element>
+      <oneOrMore>
+        <element name="_defaultQuality">
+          <ref name="quality_value"/>
+        </element>
+      </oneOrMore>
+    </element>
+  </start>
+  <define name="boolean_value">
+    <choice>
+      <value>False</value>
+      <value>True</value>
+    </choice>
+  </define>
+  <define name="quality_value">
+    <choice>
+      <value>auto</value>
+      <value>0</value>
+      <value>1</value>
+      <value>2</value>
+      <value>3</value>
+    </choice>
+  </define>
+</grammar>

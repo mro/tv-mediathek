@@ -1,3 +1,7 @@
 */*.opml*
 */opml.rng
 ard/bin/create-feeds-opml.settings
+*/????/??/??/*.json
+*/????/??/??/*.xml
+ard/bin/json2xml.py
+ard/bin/media-json.rnc

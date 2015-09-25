@@ -130,12 +130,12 @@ then
 else
   shasum "$DST" > "$DST.sha"
 
-  echo "deploy &verify..."
-  rsync "$DST" "$DEPLOY_DST"
-  CONTENT_LENGTH=$(curl --location --head "$OPML_URL" | egrep -hoe '^Content-Length: [0-9]+' | cut -c 17-)
-  [ "$CONTENT_LENGTH" != "" ] || CONTENT_LENGTH=0
-  [ $(wc -c < "$DST") -eq $CONTENT_LENGTH ] || { echo "Content size mismatch: $(pwd)/$DST != $OPML_URL" && exit 1; }
-  
+#   echo "deploy & verify..."
+#   rsync "$DST" "$DEPLOY_DST"
+#   CONTENT_LENGTH=$(curl --location --head "$OPML_URL" | egrep -hoe '^Content-Length: [0-9]+' | cut -c 17-)
+#   [ "$CONTENT_LENGTH" != "" ] || CONTENT_LENGTH=0
+#   [ $(wc -c < "$DST") -eq $CONTENT_LENGTH ] || { echo "Content size mismatch: $(pwd)/$DST != $OPML_URL" && exit 1; }
+
   # http://blog.mro.name/2015/03/key-based-ftp-authentication/
   # lftp -u <username>,xx -e "put $DST ; quit" "$FTP"
 

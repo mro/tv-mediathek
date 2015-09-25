@@ -49,69 +49,96 @@ else
 fi
 BASE_URL="http://www.ardmediathek.de"
 CLIPS_URL="$BASE_URL/tv/sendungVerpasst?tag=$day"
-subdir="./$(date "$adjust" '+%Y/%m/%d')"
+subdir="$(date "$adjust" '+%Y/%m/%d')"
+mkdir -p "$subdir" 2>/dev/null
 
-{
-  cat <<EOF
-  <rdf:RDF
+echo "xsltproc --html 'bin/$(basename "$0" .sh).xslt' '$CLIPS_URL'" 1>&2
+xsltproc --html "bin/$(basename "$0" .sh).xslt" "$CLIPS_URL" 2>/dev/null | while read time url_ title
+do
+  self="$(escape_xml "$BASE_URL$url_")"
+  document_id="$(echo "$url_" | egrep -hoe 'documentId=[0-9]+' | cut -c 12-)"
+  file_base="$subdir/$(echo "$time" | tr -d ':')00-$document_id"
+  file_base_url=""
+  
+  # fetch video version urls (quality)
+  json_url="http://www.ardmediathek.de/play/media/$document_id"
+  curl --silent --time-cond "$file_base.json" --output "$file_base.json" --url "$json_url"
+  sh "bin/json2xml.sh" -r video < "$file_base.json" > "$file_base.xml"
+  xmllint --relaxng "bin/media-json.rng" --format --encode utf8 --output "$file_base.xml~" "$file_base.xml"
+  mv "$file_base.xml~" "$file_base.xml"
+    
+  {
+    # could be done parallel (1 HTTP request per loop)
+    cat <<EOF
+<!-- ?xml-stylesheet type="text/xsl" href="../../../assets/video2html.xslt"? -->
+<rdf:RDF
      xmlns:dc="http://purl.org/dc/elements/1.1/"
      xmlns:dct="http://purl.org/dc/terms/"
      xmlns:dctype="http://purl.org/dc/dcmitype/"
      xmlns:foaf="http://xmlns.com/foaf/0.1/"
      xmlns:freq="http://purl.org/cld/freq/"
-     xmlns:iso639-1="http://lexvo.org/id/iso639-1/"
+     xmlns:iso639-3="http://lexvo.org/id/iso639-3/"
      xmlns:mime="http://purl.org/NET/mediatypes/"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:rdfs="http://www.w3schools.com/RDF/rdf-schema.xml"
      xmlns:tl="http://purl.org/NET/c4dm/timeline.owl#"
      xmlns:xdt="http://www.w3.org/2005/xpath-datatypes#"
-     xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xml:language='deu'>
 EOF
-  echo "xsltproc --html 'bin/$(basename "$0" .sh).xslt' '$CLIPS_URL'" 1>&2
-  xsltproc --html "bin/$(basename "$0" .sh).xslt" "$CLIPS_URL" 2>/dev/null | while read time url_ title
-  do
-    self="$(escape_xml "$BASE_URL$url_")"
-    # could be done parallel (1 HTTP request per loop)
-    echo "<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->"
-    echo "<dctype:MovingImage rdf:about='$self'>"
-    echo "  <dct:title xml:language='deu'>$(escape_xml "$title")</dct:title>"
-    echo "  <dct:date>$(date "$adjust" '+%Y-%m-%dT')$time:00</dct:date>"
-    document_id="$(echo "$url_" | egrep -hoe 'documentId=[0-9]+' | cut -c 12-)"
-    file_base="$subdir/$(echo "$time" | tr -d ':')-$document_id"
+    echo "<dctype:Text rdf:about='$self'>"
+    echo "  <dct:format rdf:resource='http://purl.org/NET/mediatypes/text/html'/>"
+    echo "  <dct:isFormatOf rdf:resource='$file_base_url'/>"
+    echo "  <dct:language rdf:resource='http://lexvo.org/id/iso639-3/deu'/>"
+    echo "</dctype:Text>"
 
     url_series_part="$(echo "$url_" | cut -d / -f 3)"
     series_id="$(echo "$url_" | egrep -hoe 'bcastId=[0-9]+' | cut -c 9-)"
     url_series_html="http://www.ardmediathek.de/tv/$url_series_part/Sendung?documentId=$series_id&amp;bcastId=$series_id"
     url_series_rss="$url_series_html&amp;rss=true"
-    echo "  <dct:isPartOf rdf:resource='$url_series_html'/>"
-    echo "  <dct:isVersionOf rdf:resource='$file_base'/>"
-    echo "</dctype:MovingImage>"
 
-    echo "<dctype:Text rdf:about='$file_base'>"
-    echo "  <dct:hasVersion rdf:resource='$self'/>"
+    echo "<dctype:Text rdf:about='$file_base_url'>"
+    echo "  <dct:creator rdf:resource='http://purl.mro.name/mediathek'/>"
+    echo "  <dct:title>$(escape_xml "$title")</dct:title>"
+    echo "  <dct:date>$(date "$adjust" '+%Y-%m-%dT')$time:00</dct:date>"
+    echo "  <dct:hasFormat rdf:resource='$self'/>"
+    echo "  <dct:isPartOf rdf:resource='$url_series_html'/>"
     echo "</dctype:Text>"
 
-    # fetch video version urls (quality)
-    json_url="http://www.ardmediathek.de/play/media/$document_id"
-    curl --silent --create-dirs --time-cond "$file_base.json" --output "$file_base.json" --url "$json_url"
-    sh "bin/json2xml.sh" -r video < "$file_base.json" | xmllint --relaxng "bin/media-json.rng" --format --encode utf8 - > "$file_base.xml"
     # extract image + video urls
     xsltproc "bin/media-json.xslt" "$file_base.xml" | while read mime quality url
     do
       [ "image/jpeg" = "$mime" ] && [ "$image_url" = "" ] && image_url="$url" && {
+        echo "<rdf:Description rdf:about='$file_base_url'>"
+        echo "  <dct:hasFormat rdf:resource='$image_url'/>"
+        echo "</rdf:Description>"
         echo "<dctype:StillImage rdf:about='$image_url'>"
-        echo "  <dct:isFormatOf rdf:resource='$file_base'/>"
+        echo "  <dct:isFormatOf rdf:resource='$file_base_url'/>"
         echo "  <dct:format rdf:resource='http://purl.org/NET/mediatypes/image/jpeg'/>"
         echo "</dctype:StillImage>"
       }
       [ "video/mp4"  = "$mime" ] && [ "$video_url" = "" ] && video_url="$url" && {
+        echo "<rdf:Description rdf:about='$file_base_url'>"
+        echo "  <dct:hasFormat rdf:resource='$video_url'/>"
+        echo "</rdf:Description>"
         echo "<dctype:MovingImage rdf:about='$video_url'>"
-        echo "  <dct:isFormatOf rdf:resource='$file_base'/>"
+        echo "  <dct:language rdf:resource='http://lexvo.org/id/iso639-3/deu'/>"
+        echo "  <dct:isFormatOf rdf:resource='$file_base_url'/>"
         echo "  <dct:format rdf:resource='http://purl.org/NET/mediatypes/video/mp4'/>"
         echo "</dctype:MovingImage>"
       }
       [ "$image_url" != "" ] && [ "$video_url" != "" ] && break
     done
-  done
-  echo "</rdf:RDF>"
-}
+    echo "</rdf:RDF>"
+    rm "$file_base.json" "$file_base.xml"
+  } > "$file_base.rdf"
+
+  if shasum --check "$file_base.rdf.sha"
+  then
+    # if unchanged keep timestamp
+    touch -r "$file_base.rdf.sha" "$file_base.rdf"
+  else
+    shasum "$file_base.rdf" > "$file_base.rdf.sha"
+    # deploy in case
+  fi
+done

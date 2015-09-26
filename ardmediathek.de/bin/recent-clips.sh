@@ -49,7 +49,7 @@ else
 fi
 BASE_URL="http://www.ardmediathek.de"
 CLIPS_URL="$BASE_URL/tv/sendungVerpasst?tag=$day"
-subdir="$(date "$adjust" '+%Y/%m/%d')"
+subdir="daserste.de/$(date "$adjust" '+%Y/%m/%d')"
 mkdir -p "$subdir" 2>/dev/null
 
 echo "xsltproc --html 'bin/$(basename "$0" .sh).xslt' '$CLIPS_URL'" 1>&2
@@ -83,9 +83,9 @@ do
 
     cat <<EOF
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ?xml-stylesheet type="text/xsl" href="../../../assets/entry2html.xslt"? -->
+<!-- ?xml-stylesheet type="text/xsl" href="../../../../assets/entry2html.xslt"? -->
 <!-- unorthodox relative default namespace to enable http://www.w3.org/TR/grddl-tests/#sq2 without a central server -->
-<a:entry xmlns="../../../../assets/2015/tv-mediathek.rdf"
+<a:entry xmlns="../../../../../assets/2015/tv-mediathek.rdf"
   xmlns:a="http://www.w3.org/2005/Atom" xmlns:tl="http://purl.org/NET/c4dm/timeline.owl#"
   xml:lang="de">
   <a:author>

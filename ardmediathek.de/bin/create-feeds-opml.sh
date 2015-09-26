@@ -32,7 +32,7 @@ SETTINGS_FILE="bin/$(basename "$0" .sh).settings"
 . "$SETTINGS_FILE"
 [ "$OPML_URL" != "" ] || { echo "OPML_URL must be set in $(pwd)/$SETTINGS_FILE" && exit 1; }
 
-DST="ardmediathek.de.opml"
+DST="feeds.opml"
 
 # Check preliminaries
 curl --version >/dev/null       || { echo "I need curl." && exit 1; }
@@ -44,7 +44,7 @@ shasum --version > /dev/null    || { echo "I need shasum." && exit 1; }
 # ~700 Series (~30 Series per Letter)
 # ~17000 Episodes (~25 Episodes per Series)
 
-[ "$TMP" != "" ] || TMP="."
+[ "$TMP" != "" ] || TMP="bin"
 RELAXNG_SCHEMA_URL='https://raw.githubusercontent.com/mro/opml-schema/hotfix/typo/schema.rng'
 RELAXNG_SCHEMA="$TMP/opml.rng"
 [ -f "$RELAXNG_SCHEMA" ] \

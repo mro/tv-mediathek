@@ -72,7 +72,7 @@ This schema is overly strict to fail early and catch data changes.</a:documentat
                   </choice>
                 </element>
                 <element name="_server">
-                  <empty/>
+                  <data type="anyURI"/>
                 </element>
               </optional>
               <oneOrMore>

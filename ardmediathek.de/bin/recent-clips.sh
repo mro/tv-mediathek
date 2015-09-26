@@ -48,51 +48,53 @@ else
   fi
 fi
 BASE_URL="http://www.ardmediathek.de"
-CLIPS_URL="$BASE_URL/tv/sendungVerpasst?tag=$day"
-subdir="daserste.de/$(date "$adjust" '+%Y/%m/%d')"
-mkdir -p "$subdir" 2>/dev/null
+DAY_URL="$BASE_URL/tv/sendungVerpasst?tag=$day"
 
-echo "xsltproc --html 'bin/$(basename "$0" .sh).xslt' '$CLIPS_URL'" 1>&2
-xsltproc --html "bin/$(basename "$0" .sh).xslt" "$CLIPS_URL" 2>/dev/null | while read time_ url_ title
+echo "xsltproc --html 'bin/$(basename "$0" .sh).sender.xslt' '$DAY_URL'" 1>&2
+xsltproc --html "bin/$(basename "$0" .sh).sender.xslt" "$DAY_URL" 2>/dev/null | while read clips_url_ sender_name
 do
-  [ "${time_}" != "" ] || { echo "$$time_ is unset. How can this be? '${time_} $url_ $title'" && exit 101; }
-  [ "$url_" != "" ] || { echo "$$url_ is unset. How can this be? '${time_} $url_ $title'" && exit 101; }
-  self="$(escape_xml "${BASE_URL}${url_}")"
-  document_id="$(echo "$url_" | egrep -hoe 'documentId=[0-9]+' | cut -c 12-)"
-  [ "$document_id" != "" ] || { echo "$$document_id is unset. How can this be? '$url_'" && exit 101; }
+  CLIPS_URL="${BASE_URL}$clips_url_"
+  subdir="$sender_name/$(date "$adjust" '+%Y/%m/%d')"
+  mkdir -p "$subdir" 2>/dev/null
 
-  file_base="$subdir/$(echo "${time_}" | tr -d ':')00-$document_id"
-  file_base_url=""
+  echo "xsltproc --html 'bin/$(basename "$0" .sh).xslt' '$CLIPS_URL'" 1>&2
+  xsltproc --html "bin/$(basename "$0" .sh).xslt" "$CLIPS_URL" 2>/dev/null | while read time_ url_ title
+  do
+    [ "${time_}" != "" ] || { echo "$$time_ is unset. How can this be? '${time_} $url_ $title'" && exit 101; }
+    [ "$url_" != "" ] || { echo "$$url_ is unset. How can this be? '${time_} $url_ $title'" && exit 101; }
+    self="$(escape_xml "${BASE_URL}${url_}")"
+    document_id="$(echo "$url_" | egrep -hoe 'documentId=[0-9]+' | cut -c 12-)"
+    [ "$document_id" != "" ] || { echo "$$document_id is unset. How can this be? '$url_'" && exit 101; }
 
-  # fetch video version urls (quality)
-  json_url="http://www.ardmediathek.de/play/media/$document_id"
-  curl --silent --time-cond "$file_base.json" --output "$file_base.json" --url "$json_url"
-  sh "bin/json2xml.sh" -r video < "$file_base.json" > "$file_base.xml"
-  xmllint --relaxng "bin/media-json.rng" --format --encode utf-8 --output "$file_base.xml~" "$file_base.xml"
-  mv "$file_base.xml~" "$file_base.xml"
+    file_base="$subdir/$(echo "${time_}" | tr -d ':')00-$document_id"
+    file_base_url=""
 
-  {
-    # could be done parallel (1 HTTP request per loop)
+    # fetch video version urls (quality)
+    json_url="http://www.ardmediathek.de/play/media/$document_id"
+    curl --silent --time-cond "$file_base.json" --output "$file_base.json" --url "$json_url"
+    sh "bin/json2xml.sh" -r video < "$file_base.json" > "$file_base.xml"
+    xmllint --relaxng "bin/media-json.rng" --format --encode utf-8 --output "$file_base.xml~" "$file_base.xml"
+    mv "$file_base.xml~" "$file_base.xml"
 
-    timestamp="$(date "$adjust" "+%Y-%m-%dT${time_}:00%z" | sed -e 's/..$/:\0/g')"
+    {
+      # could be done parallel (1 HTTP request per loop)
 
-    url_series_part="$(echo "$url_" | cut -d / -f 3)"
-    series_id="$(echo "$url_" | egrep -hoe 'bcastId=[0-9]+' | cut -c 9-)"
-    url_series_html="http://www.ardmediathek.de/tv/$url_series_part/Sendung?documentId=$series_id&amp;bcastId=$series_id"
-    url_series_rss="$url_series_html&amp;rss=true"
+      timestamp="$(date "$adjust" "+%Y-%m-%dT${time_}:00%z" | sed -e 's/..$/:\0/g')"
 
-    cat <<EOF
+      url_series_part="$(echo "$url_" | cut -d / -f 3)"
+      series_id="$(echo "$url_" | egrep -hoe 'bcastId=[0-9]+' | cut -c 9-)"
+      url_series_html="http://www.ardmediathek.de/tv/$url_series_part/Sendung?documentId=$series_id&amp;bcastId=$series_id"
+      url_series_rss="$url_series_html&amp;rss=true"
+
+      cat <<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ?xml-stylesheet type="text/xsl" href="../../../../assets/entry2html.xslt"? -->
 <!-- unorthodox relative default namespace to enable http://www.w3.org/TR/grddl-tests/#sq2 without a central server -->
 <a:entry xmlns="../../../../../assets/2015/tv-mediathek.rdf"
   xmlns:a="http://www.w3.org/2005/Atom" xmlns:tl="http://purl.org/NET/c4dm/timeline.owl#"
   xml:lang="de">
-  <a:author>
-    <a:name>Das Erste</a:name>
-    <a:uri>http://ard.de/</a:uri>
-  </a:author>
-  <a:link rel="via" type="text/html" href="$CLIPS_URL"/>
+  <a:author><a:name>$sender_name</a:name></a:author>
+  <a:link rel="via" type="text/html" href="$(escape_xml "$CLIPS_URL")"/>
   <a:link rel="alternate" type="text/html" href="$self"/>
 
   <a:title>$(escape_xml "$title")</a:title>
@@ -106,17 +108,18 @@ do
 <!-- validate: http://validator.w3.org/feed/ -->
 <!-- RDF: rapper -i grddl -o turtle <...> -->
 EOF
-    rm "$file_base.json" "$file_base.xml"
-  } > "$file_base.atom"
-  xmllint --nowarning --format --encode utf-8 --output "$file_base.atom~" "$file_base.atom"
-  mv "$file_base.atom~" "$file_base.atom"
+      rm "$file_base.json" "$file_base.xml"
+    } > "$file_base.atom"
+    xmllint --nowarning --format --encode utf-8 --output "$file_base.atom~" "$file_base.atom"
+    mv "$file_base.atom~" "$file_base.atom"
 
-  if shasum --check "$file_base.atom.sha"
-  then
-    # if unchanged keep timestamp
-    touch -r "$file_base.atom.sha" "$file_base.atom"
-  else
-    shasum "$file_base.atom" > "$file_base.atom.sha"
-    # deploy in case
-  fi
+    if shasum --check "$file_base.atom.sha"
+    then
+      # if unchanged keep timestamp
+      touch -r "$file_base.atom.sha" "$file_base.atom"
+    else
+      shasum "$file_base.atom" > "$file_base.atom.sha"
+      # deploy in case
+    fi
+  done
 done

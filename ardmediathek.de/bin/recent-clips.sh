@@ -118,7 +118,7 @@ do
   <a:link rel="alternate" type="text/html" href="$self"/>
 
   <a:title>$(escape_xml "$title")</a:title>
-  <a:category scheme="http://www.ardmediathek.de/tv/$url_series_part/Sendung?" term="documentId=$series_id"/>
+  <a:category scheme="http://www.ardmediathek.de/tv/$url_series_part/Sendung?documentId=" term="$series_id"/>
   <a:id>tag:ardmediathek.de,2015:documentId=$document_id</a:id>
   <a:updated>${timestamp}</a:updated>
   <a:published>${timestamp}</a:published>
@@ -135,6 +135,17 @@ EOF
       continue
     }
     mv "${TMP}/$file_base.atom~" "${CACHE}/$file_base.atom"
+
+    # TODO remove previous feed marker if any?
+    FEED_MARKER="${CACHE}/feeds/$series_id/$(basename "$file_base")"
+    [ -L "$FEED_MARKER" ] || {
+    	[ -d "$(dirname "$FEED_MARKER")" ] || {
+    		mkdir -p "$(dirname "$FEED_MARKER")"
+    		echo "$url_series_html" > "$(dirname "$FEED_MARKER")/html.url"
+    	}
+    	[ -e "$FEED_MARKER" ] && rm "$FEED_MARKER"
+    	ln -s "../../$file_base.atom" "$FEED_MARKER"
+    }
 
     if [ -f "${CACHE}/$file_base.atom.sha" ] && shasum --check "${CACHE}/$file_base.atom.sha" 1>/dev/null 2>&1
     then

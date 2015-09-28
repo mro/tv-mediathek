@@ -6,4 +6,5 @@
 */bin/json2xml.py
 */bin/media-json.rnc
 */bin/opml.rng
-tmp/
+*/cache/feeds/
+*/tmp/

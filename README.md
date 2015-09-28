@@ -48,7 +48,7 @@ Feed XMLs sollten unkomprimiert immer < 1MB sein, Webserver komprimiert.
 - [`xmllint`](http://xmlsoft.org/xmllint.html)
 - [`rapper`](http://librdf.org/raptor/rapper.html)
 - [`curl`](http://curl.haxx.se/)
-- [json2xml.py](json2xml.py](https://raw.githubusercontent.com/axet/json2xml/master/json2xml.py))
+- [`json2xml.py`](https://github.com/axet/json2xml)
 - [`rsync`](https://rsync.samba.org/)
 - [`lftp`](http://lftp.yar.ru/lftp-man.html)
 
@@ -111,3 +111,5 @@ Evtl.
 - https://github.com/xaverW/MediathekView
 - https://web.archive.org/web/20121210030455/http://appdrive.net/mediathek/
 - http://purl.mro.name/radio-pi/
+- https://github.com/raptor2101/Mediathek
+- https://github.com/michaelw/mediathek-dl

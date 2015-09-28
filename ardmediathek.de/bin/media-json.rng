@@ -67,8 +67,9 @@ This schema is overly strict to fail early and catch data changes.</a:documentat
               <optional>
                 <element name="_cdn">
                   <choice>
-                    <value>akamai</value>
                     <value>default</value>
+                    <value>akamai</value>
+                    <value>limelight</value>
                   </choice>
                 </element>
                 <element name="_server">

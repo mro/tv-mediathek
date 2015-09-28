@@ -34,3 +34,4 @@ script_url="https://raw.githubusercontent.com/axet/json2xml/master/json2xml.py"
 || { echo "Failed to download mandatory helper python script from $script_url" && exit 1; }
 
 python "$script" $@
+exit $?

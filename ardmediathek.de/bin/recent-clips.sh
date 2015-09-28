@@ -37,7 +37,7 @@ escape_xml() {
   echo "$1" | sed -e "s/\&/\&amp;/g;s/'/\&apos;/g"
 }
 
-day=0
+day=0 ; [ "$DAY" = "" ] || day=$(($DAY+0))
 if date -d '-5 day' '+%Y/%m/%d' >/dev/null 2>&1 ; then
   adjust="-d -${day} day"
 else
@@ -48,10 +48,10 @@ else
   fi
 fi
 BASE_URL="http://www.ardmediathek.de"
-DAY_URL="$BASE_URL/tv/sendungVerpasst?tag=$day"
 
-echo "xsltproc --html 'bin/$(basename "$0" .sh).sender.xslt' '$DAY_URL'" 1>&2
-xsltproc --html "bin/$(basename "$0" .sh).sender.xslt" "$DAY_URL" 2>/dev/null | while read clips_url_ sender_name
+echo "xsltproc --stringparam base_url '/tv/sendungVerpasst?tag=$day' --html 'bin/$(basename "$0" .sh).sender.xslt' '$BASE_URL/tv/sendungVerpasst?tag=$day'" 1>&2
+xsltproc --stringparam base_url "/tv/sendungVerpasst?tag=$day" --html "bin/$(basename "$0" .sh).sender.xslt" "$BASE_URL/tv/sendungVerpasst?tag=$day" 2>/dev/null \
+| while read clips_url_ sender_name
 do
   CLIPS_URL="${BASE_URL}$clips_url_"
   subdir="$sender_name/$(date "$adjust" '+%Y/%m/%d')"

@@ -29,9 +29,12 @@
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:output method="text"/>
+
+  <xsl:param name="base_url">/tv/sendungVerpasst?tag=0</xsl:param>
+
   <xsl:template match="/">
-    <xsl:text>/tv/sendungVerpasst?tag=0 Das Erste&#10;</xsl:text>
-    <xsl:for-each select="/html/body//a[starts-with(@href, '/tv/sendungVerpasst?tag=0&amp;kanal=')]">
+    <xsl:value-of select="$base_url"/><xsl:text> Das Erste&#10;</xsl:text>
+    <xsl:for-each select="/html/body//a[starts-with(@href, concat($base_url,'&amp;kanal='))]">
       <xsl:value-of select="@href"/><xsl:text> </xsl:text>
       <xsl:value-of select="normalize-space(.)"/><xsl:text>&#10;</xsl:text>
     </xsl:for-each>

@@ -35,7 +35,7 @@
   <xsl:template match="/">
     <a:entry>
       <xsl:for-each select="video/_duration">
-        <tl:durationInt><xsl:value-of select="."/></tl:durationInt>
+        <tl:durationInt><xsl:value-of select="normalize-space(.)"/></tl:durationInt>
       </xsl:for-each>
       <xsl:for-each select="video/_previewImage">
         <a:link rel="enclosure" type="image/jpeg" href="{normalize-space(.)}"/>

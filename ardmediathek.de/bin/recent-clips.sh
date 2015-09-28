@@ -57,7 +57,7 @@ do
   subdir="$sender_name/$(date "$adjust" '+%Y/%m/%d')"
   mkdir -p "$subdir" 2>/dev/null
 
-  echo "xsltproc --html 'bin/$(basename "$0" .sh).xslt' '$CLIPS_URL'" 1>&2
+  echo "$sender_name: $ xsltproc --html 'bin/$(basename "$0" .sh).xslt' '$CLIPS_URL'" 1>&2
   xsltproc --html "bin/$(basename "$0" .sh).xslt" "$CLIPS_URL" 2>/dev/null | while read time_ url_ title
   do
     [ "${time_}" != "" ] || { echo "$$time_ is unset. How can this be? '${time_} $url_ $title'" && exit 101; }
@@ -69,15 +69,21 @@ do
     file_base="$subdir/$(echo "${time_}" | tr -d ':')00-$document_id"
     file_base_url=""
 
-    # fetch video version urls (quality)
-    json_url="http://www.ardmediathek.de/play/media/$document_id"
-    curl --silent --time-cond "$file_base.json" --output "$file_base.json" --url "$json_url"
-    sh "bin/json2xml.sh" -r video < "$file_base.json" > "$file_base.xml"
-    xmllint --relaxng "bin/media-json.rng" --format --encode utf-8 --output "$file_base.xml~" "$file_base.xml"
-    mv "$file_base.xml~" "$file_base.xml"
-
     {
       # could be done parallel (1 HTTP request per loop)
+
+      # fetch video version urls (quality)
+      json_url="http://www.ardmediathek.de/play/media/$document_id"
+      curl --silent --time-cond "$file_base.json" --output "$file_base.json" --url "$json_url"
+      sh "bin/json2xml.sh" -r video < "$file_base.json" > "$file_base.xml" || {
+        echo "This is bad!" 1>&2
+        exit 111
+      }
+      xmllint --relaxng "bin/media-json.rng" --format --encode utf-8 --output "$file_base.xml~" "$file_base.xml" 2>/dev/null || {
+        echo "FAILURE: $file_base.xml from '$json_url' invalid." 1>&2
+        exit 112
+      }
+      mv "$file_base.xml~" "$file_base.xml"
 
       timestamp="$(date "$adjust" "+%Y-%m-%dT${time_}:00%z" | sed -e 's/..$/:\0/g')"
 
@@ -86,12 +92,22 @@ do
       url_series_html="http://www.ardmediathek.de/tv/$url_series_part/Sendung?documentId=$series_id&amp;bcastId=$series_id"
       url_series_rss="$url_series_html&amp;rss=true"
 
+      # iTunes Podcast http://www.apple.com/de/itunes/podcasts/specs.html#duration
+      # Yahoo! Media   https://web.archive.org/web/20090415204940/http://search.yahoo.com/mrss/
+      # OPML           http://www.opml.org/spec2
+
+      # the following uses tl:durationInt instead itunes:duration because the
+      # latter crashes http://validator.w3.org/feed/check.cgi?url=https%3A%2F%2Fweb.archive.org%2Fweb%2F20150927180152%2Fhttp%3A%2F%2Flinkeddata.mro.name%2Fdemo.atom
+      # see https://groups.google.com/forum/#!forum/feedvalidator-users
+
       cat <<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ?xml-stylesheet type="text/xsl" href="../../../../assets/entry2html.xslt"? -->
 <!-- unorthodox relative default namespace to enable http://www.w3.org/TR/grddl-tests/#sq2 without a central server -->
 <a:entry xmlns="../../../../../assets/2015/tv-mediathek.rdf"
-  xmlns:a="http://www.w3.org/2005/Atom" xmlns:tl="http://purl.org/NET/c4dm/timeline.owl#"
+  xmlns:a="http://www.w3.org/2005/Atom"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:tl="http://purl.org/NET/c4dm/timeline.owl#"
   xml:lang="de">
   <a:author><a:name>$sender_name</a:name></a:author>
   <a:link rel="via" type="text/html" href="$(escape_xml "$CLIPS_URL")"/>
@@ -110,16 +126,22 @@ do
 EOF
       rm "$file_base.json" "$file_base.xml"
     } > "$file_base.atom"
-    xmllint --nowarning --format --encode utf-8 --output "$file_base.atom~" "$file_base.atom"
+    xmllint --nowarning --format --encode utf-8 --output "$file_base.atom~" "$file_base.atom" || {
+      echo "FAILURE: $file_base.atom not well-formed"
+      continue
+    }
     mv "$file_base.atom~" "$file_base.atom"
 
-    if shasum --check "$file_base.atom.sha"
+    if [ -f "$file_base.atom.sha" ] && shasum --check "$file_base.atom.sha" 1>/dev/null 2>&1
     then
+      printf '.'
       # if unchanged keep timestamp
       touch -r "$file_base.atom.sha" "$file_base.atom"
     else
+      printf '+'
       shasum "$file_base.atom" > "$file_base.atom.sha"
       # deploy in case
     fi
   done
+  echo ""
 done

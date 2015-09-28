@@ -48,6 +48,8 @@ else
   fi
 fi
 BASE_URL="http://www.ardmediathek.de"
+CACHE="cache"
+TMP="tmp"
 
 echo "xsltproc --stringparam base_url '/tv/sendungVerpasst?tag=$day' --html 'bin/$(basename "$0" .sh).sender.xslt' '$BASE_URL/tv/sendungVerpasst?tag=$day'" 1>&2
 xsltproc --stringparam base_url "/tv/sendungVerpasst?tag=$day" --html "bin/$(basename "$0" .sh).sender.xslt" "$BASE_URL/tv/sendungVerpasst?tag=$day" 2>/dev/null \
@@ -55,7 +57,8 @@ xsltproc --stringparam base_url "/tv/sendungVerpasst?tag=$day" --html "bin/$(bas
 do
   CLIPS_URL="${BASE_URL}$clips_url_"
   subdir="$sender_name/$(date "$adjust" '+%Y/%m/%d')"
-  mkdir -p "$subdir" 2>/dev/null
+  mkdir -p "${TMP}/$subdir" 2>/dev/null
+  mkdir -p "${CACHE}/$subdir" 2>/dev/null
 
   echo "$sender_name: $ xsltproc --html 'bin/$(basename "$0" .sh).xslt' '$CLIPS_URL'" 1>&2
   xsltproc --html "bin/$(basename "$0" .sh).xslt" "$CLIPS_URL" 2>/dev/null | while read time_ url_ title
@@ -74,23 +77,24 @@ do
 
       # fetch video version urls (quality)
       json_url="http://www.ardmediathek.de/play/media/$document_id"
-      curl --silent --time-cond "$file_base.json" --output "$file_base.json" --url "$json_url"
-      sh "bin/json2xml.sh" -r video < "$file_base.json" > "$file_base.xml" || {
+      curl --silent --time-cond "${TMP}/$file_base.json" --output "${TMP}/$file_base.json" --url "$json_url"
+      sh "bin/json2xml.sh" -r video < "${TMP}/$file_base.json" > "${TMP}/$file_base.xml" || {
         echo "This is bad!" 1>&2
         exit 111
       }
-      xmllint --relaxng "bin/media-json.rng" --format --encode utf-8 --output "$file_base.xml~" "$file_base.xml" 2>/dev/null || {
-        echo "FAILURE: $file_base.xml from '$json_url' invalid." 1>&2
+      xmllint --relaxng "bin/media-json.rng" --format --encode utf-8 --output "${TMP}/$file_base.xml~" "${TMP}/$file_base.xml" 2>/dev/null || {
+        echo "FAILURE: ${TMP}/$file_base.xml from '$json_url' invalid." 1>&2
         exit 112
       }
-      mv "$file_base.xml~" "$file_base.xml"
+      mv "${TMP}/$file_base.xml~" "${TMP}/$file_base.xml"
 
       timestamp="$(date "$adjust" "+%Y-%m-%dT${time_}:00%z" | sed -e 's/..$/:\0/g')"
 
       url_series_part="$(echo "$url_" | cut -d / -f 3)"
       series_id="$(echo "$url_" | egrep -hoe 'bcastId=[0-9]+' | cut -c 9-)"
       url_series_html="http://www.ardmediathek.de/tv/$url_series_part/Sendung?documentId=$series_id&amp;bcastId=$series_id"
-      url_series_rss="$url_series_html&amp;rss=true"
+      # url_series_rss="$url_series_html&amp;rss=true"
+      url_series_rss="http://www.ardmediathek.de/export/rss/id=$series_id"
 
       # iTunes Podcast http://www.apple.com/de/itunes/podcasts/specs.html#duration
       # Yahoo! Media   https://web.archive.org/web/20090415204940/http://search.yahoo.com/mrss/
@@ -119,27 +123,27 @@ do
   <a:updated>${timestamp}</a:updated>
   <a:published>${timestamp}</a:published>
 
-  $(xsltproc "bin/media-json.xslt" "$file_base.xml" | grep -v "a:entry" | uniq)
+  $(xsltproc "bin/media-json.xslt" "${TMP}/$file_base.xml" | grep -v "a:entry" | uniq)
 </a:entry>
 <!-- validate: http://validator.w3.org/feed/ -->
 <!-- RDF: rapper -i grddl -o turtle <...> -->
 EOF
-      rm "$file_base.json" "$file_base.xml"
-    } > "$file_base.atom"
-    xmllint --nowarning --format --encode utf-8 --output "$file_base.atom~" "$file_base.atom" || {
-      echo "FAILURE: $file_base.atom not well-formed"
+      rm "${TMP}/$file_base.json" "${TMP}/$file_base.xml"
+    } > "${TMP}/$file_base.atom"
+    xmllint --nowarning --format --encode utf-8 --output "${TMP}/$file_base.atom~" "${TMP}/$file_base.atom" || {
+      echo "FAILURE: ${TMP}/$file_base.atom not well-formed"
       continue
     }
-    mv "$file_base.atom~" "$file_base.atom"
+    mv "${TMP}/$file_base.atom~" "${CACHE}/$file_base.atom"
 
-    if [ -f "$file_base.atom.sha" ] && shasum --check "$file_base.atom.sha" 1>/dev/null 2>&1
+    if [ -f "${CACHE}/$file_base.atom.sha" ] && shasum --check "${CACHE}/$file_base.atom.sha" 1>/dev/null 2>&1
     then
       printf '.'
       # if unchanged keep timestamp
-      touch -r "$file_base.atom.sha" "$file_base.atom"
+      touch -r "${CACHE}/$file_base.atom.sha" "${CACHE}/$file_base.atom"
     else
       printf '+'
-      shasum "$file_base.atom" > "$file_base.atom.sha"
+      shasum "${CACHE}/$file_base.atom" > "${CACHE}/$file_base.atom.sha"
       # deploy in case
     fi
   done

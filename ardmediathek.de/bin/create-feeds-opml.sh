@@ -27,12 +27,12 @@ cd "$(dirname "$0")/.."
 ## Scrape ardmediathek.de for RSS feeds and build a OPML summary.
 ######################################################################
 
+DST="pub/feeds/index.opml"
+
 SETTINGS_FILE="bin/$(basename "$0" .sh).settings"
 [ -f "$SETTINGS_FILE" ] || { echo "I need a $(pwd)/$SETTINGS_FILE" && exit 1; }
 . "$SETTINGS_FILE"
 [ "$OPML_URL" != "" ] || { echo "OPML_URL must be set in $(pwd)/$SETTINGS_FILE" && exit 1; }
-
-DST="pub/feeds.opml"
 
 # Check preliminaries
 curl --version >/dev/null       || { echo "I need curl." && exit 1; }
@@ -62,6 +62,7 @@ BASE_URL="http://www.ardmediathek.de/tv/sendungen-a-z?sendungsTyp=sendung"
 
 {
   cat <<EOF
+<?xml-stylesheet type="text/xsl" href="assets/opml2html.xslt"?>
 <opml version='2.0' xmlns:a='http://www.w3.org/2005/Atom'>
   <!-- 
     Lizenz: CC BY-SA 3.0 DE
@@ -74,7 +75,7 @@ BASE_URL="http://www.ardmediathek.de/tv/sendungen-a-z?sendungsTyp=sendung"
     validates against https://raw.githubusercontent.com/mro/opml-schema/hotfix/typo/schema.rng
   -->
   <head>
-    <title>ARD Mediathek RSS Feeds</title>
+    <title>ARD Mediathek Atom Feeds</title>
     <!-- <dateCreated/> see file timestamp -->
     <ownerId>http://purl.mro.name/mediathek</ownerId>
   </head>
@@ -94,7 +95,8 @@ EOF
     do
       printf "%s" '.' 1>&2
       series_url="http://www.ardmediathek.de$series_url_"
-      echo "    <outline language='de' text='$title' type='rss' version='RSS2' htmlUrl='$series_url' xmlUrl='$series_url&amp;rss=true'/>"
+      bcastId="$(echo "$series_url_" | egrep -hoe 'bcastId=[0-9]+' | cut -c 9-)"
+      echo "    <outline language='de' text='$title' type='rss' version='atom' htmlUrl='$series_url' xmlUrl='$bcastId/feed.atom'/>"
 
       # reihe_url="http://www.ardmediathek.de$reihe_url_&amp;rss=true"
       # <a class="mediaLink" href="/tv/FilmMittwoch-im-Ersten/Meister-des-Todes-H%C3%B6rfassung-Video-tg/Das-Erste/Video?documentId=30734576&amp;bcastId=10318946">

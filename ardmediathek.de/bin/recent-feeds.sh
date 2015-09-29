@@ -34,10 +34,15 @@ CACHE="cache"
 TMP="tmp"
 PUB="pub"
 
+###########################################################################
+## fetch list of all broadcasting stations
+###########################################################################
 echo "xsltproc --stringparam base_url '/tv/sendungVerpasst?tag=$day' --html 'bin/$(basename "$0" .sh).sender.xslt' '$BASE_URL/tv/sendungVerpasst?tag=$day'" 1>&2
 xsltproc --stringparam base_url "/tv/sendungVerpasst?tag=$day" --html "bin/$(basename "$0" .sh).sender.xslt" "$BASE_URL/tv/sendungVerpasst?tag=$day" 2>/dev/null \
 | while read clips_url_ sender_name
 do
+  #########################################################################
+  ## fetch urls of recent clips
   CLIPS_URL="${BASE_URL}$clips_url_"
   echo "$sender_name: $ xsltproc --html 'bin/$(basename "$0" .sh).xslt' '$CLIPS_URL'" 1>&2
   xsltproc --html "bin/$(basename "$0" .sh).xslt" "$CLIPS_URL" 2>/dev/null | while read time_ url_ title

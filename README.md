@@ -83,6 +83,22 @@ Evtl.
 4. Video markieren
 5. Feed bereinigen (alte Meta-Daten entfernen), aktualisieren, pubsubhubbub
 
+### Minimalvariante
+
+- alle Feeds (des Tages? Der letzten Stunde?) abklappern (http://www.ardmediathek.de/tv/sendungen-a-z),
+- die RSS URL Form http://www.ardmediathek.de/export/rss/id=1458 benutzen,
+- gucken ob der SHA sich geändert hat,
+- einen Atom Feed bauen,
+- mit `enclosure`s etc. aus der vorherigen Version anreichern,
+- unbekannte enclosures per `documentId` und http://www.ardmediathek.de/play/media/30757328 ergänzen,
+- dasselbe evtl. für `content` etc.,
+- speichern, SHA, deploy, ggf, pubsubhubbub.
+
+    feeds.opml.sha
+    feeds.opml
+    1458/feed.atom
+    1458/feed.atom.sha
+
 ## Qualität
 
 | Quality         | very good | good | normal | irrelevant |

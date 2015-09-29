@@ -32,7 +32,7 @@ SETTINGS_FILE="bin/$(basename "$0" .sh).settings"
 . "$SETTINGS_FILE"
 [ "$OPML_URL" != "" ] || { echo "OPML_URL must be set in $(pwd)/$SETTINGS_FILE" && exit 1; }
 
-DST="cache/feeds.opml"
+DST="pub/feeds.opml"
 
 # Check preliminaries
 curl --version >/dev/null       || { echo "I need curl." && exit 1; }

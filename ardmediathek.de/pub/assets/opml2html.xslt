@@ -51,7 +51,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
       <!-- meta name="viewport" content="width=400"/ -->
       <link href="../assets/style.css" rel="stylesheet" type="text/css"/>
-    
+
       <link rel='license'>http://creativecommons.org/licenses/by-sa/3.0/de/</link>
       <link rel='via' href='index.opml'/>
 
@@ -61,13 +61,20 @@
 body {
   background-color: #EAEAEC;
 }
+li.ghost {
+  color: #AAA;
+}
 /*]]>]]&gt;*/
         </style>
     </head>
     <body>
-      <h1><xsl:value-of select="head/title"/></h1>
+      <h1 id="top"><xsl:value-of select="head/title"/></h1>
 
-      <h2>Lizenz</h2>
+      <p>
+        <a href="https://de.wikipedia.org/wiki/Atom_%28Format%29">Wikipedia: Atom (Format)</a>
+      </p>
+
+      <h2 id="license">Lizenz</h2>
   <p><a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/de/"><img style=
   "border-width:0" src="http://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg"
   alt="Creative Commons Lizenzvertrag" /></a><br />
@@ -79,8 +86,9 @@ body {
   href="http://creativecommons.org/licenses/by-sa/3.0/de/">Creative Commons Namensnennung -
   Weitergabe unter gleichen Bedingungen 3.0 Deutschland Lizenz</a>.</p>
 
-      <h2>Quellen</h2>
-      <ul>
+      <h2 id="sources">Quellen</h2>
+
+      <ul id="sourcelist">
         <li>Original Daten von: <a href="http://www.ardmediathek.de/tv/sendungVerpasst">
         ARD Mediathek</a></li>
 
@@ -92,19 +100,24 @@ body {
         Heyse</a> (1922), Initialen nach Zeichnungen von <a href="https://de.wikipedia.org/wiki/Eduard_Ege">Eduard Ege</a>
         </li>
       </ul>
-    
-      <h2>Feeds</h2>
+
+      <h2 id="feeds">Feeds</h2>
 
       <xsl:for-each select="body/outline">
-        <h3><xsl:value-of select="@text"/></h3>
-        <ul>
+        <h3 class="letter"><xsl:value-of select="@text"/></h3>
+        <ul id="feedlist">
           <xsl:for-each select="outline[@type='rss' and @version='atom']">
-            <xsl:variable name="_id" select="concat('feed_', substring-before(@xmlUrl, '/'))"/>
-            <li id="{$_id}">
-              <span><xsl:value-of select="@text"/></span><xsl:text> </xsl:text>
-              <a href="{@xmlUrl}">atom</a><xsl:text> </xsl:text>
-              <a href="{@htmlUrl}">html</a><xsl:text> </xsl:text>
-              <a href="#{$_id}">¶</a><xsl:text> </xsl:text>
+            <xsl:variable name="_id" select="concat('feed_', substring-after(@htmlUrl, 'bcastId='))"/>
+            <li class="feed" id="{$_id}">
+              <xsl:if test="not(@xmlUrl)">
+                <xsl:attribute name="class">feed ghost</xsl:attribute>
+              </xsl:if>
+              <span class="title"><xsl:value-of select="@text"/></span><xsl:text> </xsl:text>
+              <xsl:if test="@xmlUrl">
+                <a class="atom" href="{@xmlUrl}">atom (<span class="counter"><xsl:value-of select="@title"/></span>)</a><xsl:text> </xsl:text>
+              </xsl:if>
+              <a class="html" href="{@htmlUrl}">html</a><xsl:text> </xsl:text>
+              <a class="anchor" href="#{$_id}">¶</a><xsl:text> </xsl:text>
             </li>
           </xsl:for-each>
         </ul>

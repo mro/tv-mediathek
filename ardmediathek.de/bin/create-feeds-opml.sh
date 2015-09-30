@@ -96,7 +96,12 @@ EOF
       printf "%s" '.' 1>&2
       series_url="http://www.ardmediathek.de$series_url_"
       bcastId="$(echo "$series_url_" | egrep -hoe 'bcastId=[0-9]+' | cut -c 9-)"
-      echo "    <outline language='de' text='$title' type='rss' version='atom' htmlUrl='$series_url' xmlUrl='$bcastId/feed.atom'/>"
+      printf "    <outline language='de' text='%s' type='rss' version='atom' htmlUrl='%s'" "$title" "$series_url"
+      [ ! -f "pub/feeds/$bcastId/feed.atom" ] || {
+        printf " xmlUrl='%s/feed.atom'" "$bcastId"
+        printf " title='%d'" "$(xmllint --xpath 'count(/*/*[local-name()="entry"])' "pub/feeds/$bcastId/feed.atom")"
+      }
+      printf "/>\n"
 
       # reihe_url="http://www.ardmediathek.de$reihe_url_&amp;rss=true"
       # <a class="mediaLink" href="/tv/FilmMittwoch-im-Ersten/Meister-des-Todes-H%C3%B6rfassung-Video-tg/Das-Erste/Video?documentId=30734576&amp;bcastId=10318946">

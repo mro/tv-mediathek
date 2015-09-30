@@ -62,7 +62,7 @@ BASE_URL="http://www.ardmediathek.de/tv/sendungen-a-z?sendungsTyp=sendung"
 
 {
   cat <<EOF
-<?xml-stylesheet type="text/xsl" href="assets/opml2html.xslt"?>
+<?xml-stylesheet type="text/xsl" href="../assets/opml2html.xslt"?>
 <opml version='2.0' xmlns:a='http://www.w3.org/2005/Atom'>
   <!-- 
     Lizenz: CC BY-SA 3.0 DE
@@ -70,8 +70,8 @@ BASE_URL="http://www.ardmediathek.de/tv/sendungen-a-z?sendungsTyp=sendung"
   <!-- 
     <a:link rel='license'>http://creativecommons.org/licenses/by-sa/3.0/de/</a:link>
     <a:link rel='self'>$OPML_URL</a:link>
-    <a:link rel='source'>$BASE_URL</a:link>
-    <a:link rel='hub'>$PUBSUBHUBBUB</a:link>
+    <a:link rel='via'>$BASE_URL</a:link>
+    <a:link rel='hub'>$PUBSUBHUBBUB_URL</a:link>
     validates against https://raw.githubusercontent.com/mro/opml-schema/hotfix/typo/schema.rng
   -->
   <head>

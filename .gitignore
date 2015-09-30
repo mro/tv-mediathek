@@ -2,7 +2,6 @@
 */*/*/????/??/??/*.sha
 */*/*.opml*
 */bin/create-feeds-opml.settings
-*/bin/hourly.sh
 */bin/json2xml.py
 */bin/media-json.rnc
 */bin/opml.rng

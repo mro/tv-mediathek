@@ -29,8 +29,6 @@ which xargs >/dev/null          || { echo "I need xargs" && exit 1; }
 ruby --version >/dev/null       || { echo "I need ruby 1.8.7 or higher" && exit 1; }
 lftp --version >/dev/null       || { echo "I need lftp" && exit 1; }
 
-sh bin/create-feeds-opml.sh
-
 # download (cache) RSS candidates
 url_pattern='http://www.ardmediathek.de/export/rss/id={}'
 # url_pattern='http://www.ardmediathek.de/tv/Tatort/Sendung?documentId={}&rss=true'
@@ -39,23 +37,27 @@ sh bin/recent-feeds.sh \
   | uniq \
   | egrep -hoe "bcastId=[0-9]+" \
   | cut -c 9- \
-	| xargs -I{} -P 15 -n 1 -- curl --create-dirs --silent --output 'cache/feeds/{}/feed.rss' "$url_pattern"
+  | xargs -I{} -P 15 -n 1 -- curl --create-dirs --silent --output 'cache/feeds/{}/feed.rss' "$url_pattern"
 # find changed ones and run them through bin/atom.rb
 # New feeds are picked up on 2nd run. That's IMO acceptable.
 shasum --check cache/feeds.sha \
   | grep "/feed.rss: FAILED" \
   | egrep -hoe "^cache/feeds/[0-9]+/feed.rss" \
-	| sort -n \
-	| uniq \
-	| xargs -n 1 -- ruby bin/atom.rb
+  | sort -n \
+  | uniq \
+  | xargs -n 1 -- ruby bin/atom.rb
 shasum cache/feeds/*/feed.rss > cache/feeds.sha
+
+sh bin/create-feeds-opml.sh
 
 ## deploy ...
 
 shasum --check pub/feeds.sha \
   | grep "/feed.atom: FAILED" \
   | egrep -hoe "^pub/feeds/[0-9]+/feed.atom" \
-	| sort -n \
-	| uniq \
-	| xargs -P 15 -I{} -n 1 -- echo "notify pubsubhubbbub {}"
+  | sort -n \
+  | uniq \
+  | xargs -P 15 -I{} -n 1 -- echo "notify pubsubhubbbub {}"
 shasum pub/feeds/*/feed.atom > pub/feeds.sha
+
+echo "done. $(date)"

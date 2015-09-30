@@ -23,8 +23,8 @@
 #
 require 'uri'
 
-
-BASE_URI = URI::parse 'http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/feeds/'
+BASE_URL = URI::parse 'http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/feeds/'
+PUBSUBHUBBUB_URL = nil
 
 # http://ruby-doc.org/stdlib-1.8.7/libdoc/rexml/rdoc/REXML/Document.html
 require 'rexml/document'
@@ -137,22 +137,23 @@ def process_feed bcastId
     return nil
   end if current_rss.nil?
 
-  atom_uri = BASE_URI + (bcastId + '/feed.atom')
+  atom_uri = BASE_URL + (bcastId + '/feed.atom')
   new_atom = <<ATOM_XML
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/" xmlns:tl="http://purl.org/NET/c4dm/timeline.owl#" xml:lang="de">
   <updated>1970-01-01T00:01:02Z</updated>
   <generator>https://github.com/mro/tv-mediathek/tree/master/ardmediathek.de/bin/atom.rb</generator>
+  <link rel='related' href='../index.opml' title='Feed List'/>
 </feed>
 ATOM_XML
   new_atom = REXML::Document.new new_atom
   new_feed = new_atom.root
   new_feed.add_text_element 'title', current_rss.elements['/rss/channel/title'].text
-  new_feed.add_text_element 'id', (BASE_URI + bcastId)
+  new_feed.add_text_element 'id', (BASE_URL + bcastId)
   new_feed.add_element('author').add_text_element('name', current_rss.elements['/rss/channel/copyright'].text)
   new_feed.add_element 'link', {'rel'=>'self', 'type'=>'application/atom+xml', 'href'=>atom_uri}
   new_feed.add_element 'link', {'rel'=>'alternate', 'type'=>'application/rss+xml', 'href'=>rss_uri}
   new_feed.add_element 'link', {'rel'=>'alternate', 'type'=>'text/html', 'href'=>URI::parse("http://www.ardmediathek.de/tv/.../Sendung?documentId=#{bcastId}&amp;bcastId=#{bcastId}")}
-  new_feed.add_element 'link', {'rel'=>'via', 'type'=>'text/html', 'href'=>URI::parse("http://www.ardmediathek.de/tv/.../Sendung?documentId=#{bcastId}&amp;bcastId=#{bcastId}")}
+  new_feed.add_element 'link', {'rel'=>'hub', 'href'=>PUBSUBHUBBUB_URL} unless PUBSUBHUBBUB_URL.nil?
   current_rss.elements.each('/rss/channel/item') do |item|
     $stderr.write '.'
     # clone RSS entry
@@ -179,7 +180,7 @@ ATOM_XML
   end
 
   FileUtils.mkdir_p File.dirname(atom_file_name)
-  File.open(atom_file_name,'w'){|f| new_atom.write(f, 2)}
+  File.open(atom_file_name,'w'){|f| new_atom.write(f)}
 end
 
 ARGV.each.collect do |id_raw|

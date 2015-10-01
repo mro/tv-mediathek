@@ -1,10 +1,23 @@
 
 # Mediathek Meta Maschine
 
-Die Meta-Daten der Mediatheken der D-A-CH öffentlich-rechtlichen TV-Sender als Video-Podcasts in
-maschinenlesbar.
+Die Mediatheken der D-A-CH öffentlich-rechtlichen TV-Sender als Video-Podcasts.
 
 Zunächst ARD, schrittweise (aber evtl. langsam) mehr.
+
+## Beispiel
+
+http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/feeds/index.opml
+
+## Installation
+
+    $ sudo apt-get install git cron curl libxml2-utils xsltproc
+    $ mkdir $HOME/Documents && cd $HOME/Documents
+    $ git clone https://github.com/mro/tv-mediathek.git && cd tv-mediathek/ardmediathek.de/bin
+    $ vim create-feeds-opml.settings
+    $ vim cron.sh
+    $ crontab -e
+    15,45 * * * * cd $HOME/Documents/tv-mediathek/ardmediathek.de && nice sh bin/cron.sh 1> tmp/stdout.log 2> tmp/stderr.log
 
 ## Anforderungen
 
@@ -21,21 +34,23 @@ Siehe [Installation](#installation) unten.
 Veränderte Feedliste und Feeds benachrichtigen
 [PubSubHubbub](https://de.wikipedia.org/wiki/PubSubHubbub)
 
-Außerdem sind [`Last-Modified`](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.29) und
+Außerdem ist [`Last-Modified`](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.29) evtl.
 [`Expires`](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.21) richtig gesetzt.
 
 ### Sendungen als Video Podcast
 
-[Atom](http://atomenabled.org/developers/syndication/) oder zur Not RSS mit mp4-enclosure, zum Abo
-per
+[![Atom Feed Logo](https://rawgithub.com/mro/tv-mediathek/master/ardmediathek.de/pub/assets/atomenabled.svg)](http://atomenabled.org)
+zum Abo per
 
 - http://itunes.com
 - http://www.getmiro.com
-- ?
+- all [Atom-enabled Podcatchers - see column `BH`](https://docs.google.com/spreadsheets/d/1c2L14UVH1xtN4iDG4awheLbMgPCQgaKEamUauWs1gps/edit?pli=1#gid=0)
 
 ### Handhabbare Datenmengen
 
 Feed XMLs sollten unkomprimiert immer < 1MB sein, Webserver komprimiert.
+
+Ggf. '[Paged Feeds](http://tools.ietf.org/html/rfc5005)'.
 
 ### Standard Prozesse, Datenformate und Werkzeuge
 
@@ -103,20 +118,6 @@ Später evtl.
 	- [`dct:format`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:format)
 	- [`dct:language`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:language)
 	- [`dct:publisher`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:publisher)
-
-## Installation
-
-    $ sudo apt-get install git cron curl libxml2-utils xsltproc
-    $ mkdir $HOME/Documents && cd $HOME/Documents
-    $ git clone https://github.com/mro/tv-mediathek.git && cd tv-mediathek/ardmediathek.de/bin
-    $ vim create-feeds-opml.settings
-    $ vim cron.sh
-    $ crontab -e
-    15,45 * * * * cd $HOME/Documents/tv-mediathek/ardmediathek.de && nice sh bin/cron.sh 1> tmp/stdout.log 2> tmp/stderr.log
-
-## Beispiel
-
-http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/feeds/
 
 ## Qualität
 

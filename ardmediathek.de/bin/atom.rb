@@ -81,8 +81,8 @@ def fetch_mp4_url p, entryId, quality
           next if url.end_with? '.f4m'
           url = decode_json_via_yaml_postprocess(url)
           begin
-            mp4url = URI::parse url
-            ret << {'href'=>mp4url.to_s, 'rel'=>'enclosure', 'type'=>'video/mp4', 'title'=>"q-#{mediaStream['_quality']}"}
+            mp4url = URI::parse url.gsub('&amp;','&')
+            ret << {'href'=>mp4url, 'rel'=>'enclosure', 'type'=>'video/mp4', 'title'=>"q-#{mediaStream['_quality']}"}
           rescue URI::InvalidURIError => e
             # $stderr.puts "Strange URI: '#{url}'"
           end
@@ -152,7 +152,7 @@ ATOM_XML
   new_feed.add_element('author').add_text_element('name', current_rss.elements['/rss/channel/copyright'].text)
   new_feed.add_element 'link', {'rel'=>'self', 'type'=>'application/atom+xml', 'href'=>atom_uri}
   new_feed.add_element 'link', {'rel'=>'alternate', 'type'=>'application/rss+xml', 'href'=>rss_uri}
-  new_feed.add_element 'link', {'rel'=>'alternate', 'type'=>'text/html', 'href'=>URI::parse("http://www.ardmediathek.de/tv/.../Sendung?documentId=#{bcastId}&amp;bcastId=#{bcastId}")}
+  new_feed.add_element 'link', {'rel'=>'alternate', 'type'=>'text/html', 'href'=>URI::parse("http://www.ardmediathek.de/tv/.../Sendung?documentId=#{bcastId}&bcastId=#{bcastId}")}
   new_feed.add_element 'link', {'rel'=>'hub', 'href'=>PUBSUBHUBBUB_URL} unless PUBSUBHUBBUB_URL.nil?
   current_rss.elements.each('/rss/channel/item') do |item|
     $stderr.write '.'
@@ -161,7 +161,7 @@ ATOM_XML
     entryId = /documentId=(\d+)/.match(url.to_s)[1]
     tag = "tag:ardmediathek.de,2015:documentId=#{entryId}"
     new_entry = new_feed.add_text_element 'entry'
-    new_entry.add_element 'link', {'rel'=>'alternate', 'type'=>'text/html', 'href'=>url.to_s.to_xml}
+    new_entry.add_element 'link', {'rel'=>'alternate', 'type'=>'text/html', 'href'=>url}
     new_entry.add_text_element 'id', tag
     new_entry.add_text_element 'title', item.elements['title'].text
     new_entry.add_text_element 'summary', item.elements['description'].text

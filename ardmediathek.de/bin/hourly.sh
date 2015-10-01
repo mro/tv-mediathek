@@ -27,7 +27,7 @@ cd "$(dirname "$0")/.."
 curl --version >/dev/null       || { echo "I need curl" && exit 1; }
 which xargs >/dev/null          || { echo "I need xargs" && exit 1; }
 ruby --version >/dev/null       || { echo "I need ruby 1.8.7 or higher" && exit 1; }
-lftp --version >/dev/null       || { echo "I need lftp" && exit 1; }
+# lftp --version >/dev/null       || { echo "I need lftp" && exit 1; }
 
 # download (cache) RSS candidates
 url_pattern='http://www.ardmediathek.de/export/rss/id={}'
@@ -45,7 +45,7 @@ shasum --check cache/feeds.sha \
   | egrep -hoe "^cache/feeds/[0-9]+/feed.rss" \
   | sort -n \
   | uniq \
-  | xargs -n 1 -- ruby bin/atom.rb
+  | xargs -P 8 -n 1 -- ruby bin/atom.rb
 shasum cache/feeds/*/feed.rss > cache/feeds.sha
 
 sh bin/create-feeds-opml.sh

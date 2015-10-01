@@ -161,10 +161,10 @@ ATOM_XML
     entryId = /documentId=(\d+)/.match(url.to_s)[1]
     tag = "tag:ardmediathek.de,2015:documentId=#{entryId}"
     new_entry = new_feed.add_text_element 'entry'
-    new_entry.add_element 'link', {'rel'=>'via', 'type'=>'text/html', 'href'=>url.to_s.to_xml}
+    new_entry.add_element 'link', {'rel'=>'alternate', 'type'=>'text/html', 'href'=>url.to_s.to_xml}
     new_entry.add_text_element 'id', tag
     new_entry.add_text_element 'title', item.elements['title'].text
-    new_entry.add_text_element 'content', item.elements['description'].text
+    new_entry.add_text_element 'summary', item.elements['description'].text
     new_entry.add_text_element 'updated', item.elements['pubDate'].text.rfc822_to_iso8601
 
     # re-use old atom entry/link[@rel='enclosure']

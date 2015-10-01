@@ -1,18 +1,20 @@
 
-# Mediathek Meta Data Maschine
+# Mediathek Meta Maschine
 
 Die Meta-Daten der Mediatheken der D-A-CH öffentlich-rechtlichen TV-Sender als Video-Podcasts in
 maschinenlesbar.
 
+Zunächst ARD, schrittweise (aber evtl. langsam) mehr.
+
 ## Anforderungen
 
-### Leicht zu hosten
+### Leicht zu installieren und zu hosten
 
 Webserver: Nur statische Dateien mit Metadaten (keine Videos).
 
 Server: cron, dash-Skripte, debian sqeeze mit möglichst wenigen Abhängigkeiten.
 
-    $ sudo apt-get install cron curl python libxml2-utils xsltproc raptor2-utils rsync lftp
+Siehe [Installation](#installation) unten.
 
 ### Neue Sendungen möglichst in Echtzeit
 
@@ -37,67 +39,84 @@ Feed XMLs sollten unkomprimiert immer < 1MB sein, Webserver komprimiert.
 
 ### Standard Prozesse, Datenformate und Werkzeuge
 
-- [HTTP/1.1](http://www.w3.org/Protocols/rfc2616/rfc2616.html)
-- [RDF](https://www.w3.org/RDF/)
-- [OPML](https://de.wikipedia.org/wiki/Outline_Processor_Markup_Language)
+Standards
+
 - [Atom](http://atomenabled.org/developers/syndication/), [RFC4287](https://tools.ietf.org/html/rfc4287)
+- [OPML](https://de.wikipedia.org/wiki/Outline_Processor_Markup_Language)
 - [PubSubHubbub](https://en.wikipedia.org/wiki/PubSubHubbub)
-- [RelaxNG](http://blog.mro.name/2010/05/xml-toolbox-relax-ng-trang/)
+- [XSLT 1.0](http://www.w3.org/TR/xslt/)
+- [HTTP/1.1](http://www.w3.org/Protocols/rfc2616/rfc2616.html)
+
+Werkzeuge
+
 - [`dash` oder `bash`](https://wiki.ubuntu.com/DashAsBinSh)
+- [`curl`](http://curl.haxx.se/)
+- [`cron`](https://packages.debian.org/de/wheezy/cron)
 - [`xsltproc`](http://xmlsoft.org/XSLT/xsltproc.html)
 - [`xmllint`](http://xmlsoft.org/xmllint.html)
+
+Später evtl.
+
+- [RDF](https://www.w3.org/RDF/)
+- [RelaxNG](http://blog.mro.name/2010/05/xml-toolbox-relax-ng-trang/)
 - [`rapper`](http://librdf.org/raptor/rapper.html)
-- [`curl`](http://curl.haxx.se/)
-- [`json2xml.py`](https://github.com/axet/json2xml)
 - [`rsync`](https://rsync.samba.org/)
 - [`lftp`](http://lftp.yar.ru/lftp-man.html)
 
-Evtl.
+### Datenquelle ardmediathek.de
 
-- [PHP: simple html dom](http://sourceforge.net/projects/simplehtmldom/)
+- http://www.ardmediathek.de/tv/sendungVerpasst?tag=0
+- http://www.ardmediathek.de/export/rss/id=1458
+- http://www.ardmediathek.de/play/media/30786788
 
-### Datenbasis programm.ard.de und ardmediathek.de
+Später evtl.
 
+- http://www.ardmediathek.de/tv/Die-Sendung-mit-der-Maus/Die-Sendung-mit-der-Maus-vom-27-09-2015-/Das-Erste/Video?documentId=30786788&bcastId=1458
 - http://programm.ard.de/tv?datum=25.09.2015&hour=12
 
 ## Ablauf
 
-1. frische Videos von http://programm.ard.de/tv?datum=23.09.2015&hour=20&sender=28725
-2. pro Video zugehörigen RSS Feed finden (http://linkeddata.mro.name/open/tv/ardmediathek.de.opml)
-   Film `bcastId` -> Feed `documentId`  
-   Film Url: http://mediathek.daserste.de/FilmMittwoch-im-Ersten/Meister-des-Todes-Video-tgl-ab-20-Uhr/Das-Erste/Video?documentId=30734544&topRessort&bcastId=10318946  
-   RSS Url: http://www.ardmediathek.de/tv/FilmMittwoch-im-Ersten/Sendung?documentId=10318946&rss=true
-3. falls Video (Meta) unbekannt/veraltet:
-  1. `documentId` -> mp4 via JSON http://www.ardmediathek.de/play/media/30734544
-     `curl http://www.ardmediathek.de/play/media/30734544 | python bin/json2xml.py -r video | xmllint --format --encode utf8 -`
-  2. sonstige ([dct](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata)) Meta aus Filmseite (HTML):
-    - [`dct:valid`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:valid)
-    - [`dct:date`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:date)
-    - [`dct:title`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:title)
-    - [`dct:subject`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:subject)
-    - [`dct:abstract`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:abstract)
-    - [`dct:extent`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:extent)
-    - [`dct:format`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:format)
-    - [`dct:language`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:language)
-    - [`dct:publisher`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:publisher)
-4. Video markieren
-5. Feed bereinigen (alte Meta-Daten entfernen), aktualisieren, pubsubhubbub
-
 ### Minimalvariante
 
-- alle Feeds (des Tages? Der letzten Stunde?) abklappern (http://www.ardmediathek.de/tv/sendungen-a-z),
-- die RSS URL Form http://www.ardmediathek.de/export/rss/id=1458 benutzen,
+- alle Sendungen (des Tages? Der letzten Stunde?) abklappern (http://www.ardmediathek.de/tv/sendungVerpasst?tag=0) und deren Feeds auflisten,
+- die RSS Feed URL Form http://www.ardmediathek.de/export/rss/id=1458 benutzen, laden und cachen,
 - gucken ob der SHA sich geändert hat,
 - einen Atom Feed bauen,
 - mit `enclosure`s etc. aus der vorherigen Version anreichern,
 - unbekannte enclosures per `documentId` und http://www.ardmediathek.de/play/media/30757328 ergänzen,
 - dasselbe evtl. für `content` etc.,
 - speichern, SHA, deploy, ggf, pubsubhubbub.
+- Liste aller Feeds erstellen aus http://www.ardmediathek.de/tv/sendungen-a-z
 
-    feeds.opml.sha
-    feeds.opml
+    index.opml
     1458/feed.atom
-    1458/feed.atom.sha
+
+### Ausbaustufen
+
+- sonstige ([dct](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata)) Meta aus [Filmseite (HTML)](http://www.ardmediathek.de/tv/Die-Sendung-mit-der-Maus/Die-Sendung-mit-der-Maus-vom-27-09-2015-/Das-Erste/Video?documentId=30786788&bcastId=1458):
+	- [`dct:valid`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:valid)
+	- [`dct:date`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:date)
+	- [`dct:title`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:title)
+	- [`dct:subject`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:subject)
+	- [`dct:abstract`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:abstract)
+	- [`dct:extent`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:extent)
+	- [`dct:format`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:format)
+	- [`dct:language`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:language)
+	- [`dct:publisher`](http://wiki.dublincore.org/index.php/User_Guide/Publishing_Metadata#dcterms:publisher)
+
+## Installation
+
+    $ sudo apt-get install git cron curl libxml2-utils xsltproc
+    $ mkdir $HOME/Documents && cd $HOME/Documents
+    $ git clone https://github.com/mro/tv-mediathek.git && cd tv-mediathek/ardmediathek.de/bin
+    $ vim create-feeds-opml.settings
+    $ vim hourly.sh
+    $ crontab -e
+    15,45 * * * * cd $HOME/Documents/tv-mediathek/ardmediathek.de && nice sh bin/hourly.sh 1> tmp/stdout.log 2> tmp/stderr.log
+
+## Beispiel
+
+http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/feeds/
 
 ## Qualität
 
@@ -129,3 +148,4 @@ Evtl.
 - http://purl.mro.name/radio-pi/
 - https://github.com/raptor2101/Mediathek
 - https://github.com/michaelw/mediathek-dl
+- http://podlove.org/

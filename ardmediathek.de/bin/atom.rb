@@ -23,7 +23,7 @@
 #
 require 'uri'
 
-BASE_URL = URI::parse 'http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/feeds/'
+BASE_URL = URI::parse 'http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/series/'
 PUBSUBHUBBUB_URL = nil
 
 # http://ruby-doc.org/stdlib-1.8.7/libdoc/rexml/rdoc/REXML/Document.html
@@ -94,7 +94,7 @@ def fetch_mp4_url p, entryId, quality
   end
 end
 
-if 0 == ARGV.count
+if 1 == ARGV.count && ('-h' == ARGV[0])
 then
   puts <<EOF
 - Fetch ardmediathek.de RSS feeds,
@@ -114,7 +114,7 @@ end
 def process_feed bcastId
   # load existing Atom (result) feed
   bcastId = bcastId.to_s
-  atom_file_name = File.join('pub','feeds',bcastId,'feed.atom')
+  atom_file_name = File.join('pub','series',bcastId,'feed.atom')
   old_atom_index = {}
   old_atom = begin
     feed = File.open(atom_file_name, 'r'){|f| REXML::Document.new(f)}
@@ -124,7 +124,7 @@ def process_feed bcastId
 
   # load RSS (cached source) feed
   rss_uri = URI::parse("http://www.ardmediathek.de/export/rss/id=#{bcastId}")
-  rss_file = File.join('cache','feeds',bcastId,'feed.rss')  
+  rss_file = File.join('cache','series',bcastId,'feed.rss')  
   $stderr.write "\n#{rss_file} "
   current_rss = begin
     File.open(rss_file, 'r'){|f| REXML::Document.new(f)}
@@ -184,7 +184,7 @@ ATOM_XML
 end
 
 ARGV.each.collect do |id_raw|
-  m = /cache\/feeds\/([0-9]+)\/feed.rss/.match(id_raw)
+  m = /cache\/series\/([0-9]+)\/feed.rss/.match(id_raw)
   if m.nil?
     m = /^(?:.*?bcastId=)?([0-9]+).*?/.match(id_raw)
     raise "What a strange id: '#{id_raw}'" if m.nil?

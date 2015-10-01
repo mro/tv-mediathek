@@ -7,17 +7,16 @@ Zunächst ARD, schrittweise (aber evtl. langsam) mehr.
 
 ## Beispiel
 
-http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/feeds/index.opml
+http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/series/index.opml
 
 ## Installation
 
     $ sudo apt-get install git cron curl libxml2-utils xsltproc
     $ mkdir $HOME/Documents && cd $HOME/Documents
-    $ git clone https://github.com/mro/tv-mediathek.git && cd tv-mediathek/ardmediathek.de/bin
-    $ vim create-feeds-opml.settings
-    $ vim cron.sh
+    $ git clone https://github.com/mro/tv-mediathek.git && cd tv-mediathek
+    $ vim run.config
     $ crontab -e
-    15,45 * * * * cd $HOME/Documents/tv-mediathek/ardmediathek.de && nice sh bin/cron.sh 1> tmp/stdout.log 2> tmp/stderr.log
+    15,45 * * * * cd $HOME/Documents/tv-mediathek && nice sh run.sh 1> tmp/stdout.log 2> tmp/stderr.log
 
 ## Anforderungen
 
@@ -39,7 +38,7 @@ Außerdem ist [`Last-Modified`](http://www.w3.org/Protocols/rfc2616/rfc2616-sec1
 
 ### Sendungen als Video Podcast
 
-[![Atom Feed Logo](https://rawgithub.com/mro/tv-mediathek/master/ardmediathek.de/pub/assets/atomenabled.svg)](http://atomenabled.org)
+[![Atom Feed Logo](https://rawgithub.com/mro/tv-mediathek/master/assets/atomenabled.svg)](http://atomenabled.org)
 zum Abo per
 
 - http://itunes.com
@@ -150,3 +149,4 @@ Später evtl.
 - https://github.com/raptor2101/Mediathek
 - https://github.com/michaelw/mediathek-dl
 - http://podlove.org/
+- http://www.bbc.co.uk/ontologies/po

@@ -22,17 +22,16 @@
 # THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 cd "$(dirname "$0")/.."
+printf "%s" "$(basename "$0") "
 
 ######################################################################
 ## Scrape ardmediathek.de for RSS feeds and build a OPML summary.
 ######################################################################
 
-DST="pub/feeds/index.opml"
-
-SETTINGS_FILE="bin/$(basename "$0" .sh).settings"
+SETTINGS_FILE="../run.config"
 [ -f "$SETTINGS_FILE" ] || { echo "I need a $(pwd)/$SETTINGS_FILE" && exit 1; }
 . "$SETTINGS_FILE"
-[ "$OPML_URL" != "" ] || { echo "OPML_URL must be set in $(pwd)/$SETTINGS_FILE" && exit 1; }
+[ "$BASE_URL" != "" ] || { echo "BASE_URL must be set in $(pwd)/$SETTINGS_FILE" && exit 1; }
 
 # Check preliminaries
 curl --version >/dev/null       || { echo "I need curl." && exit 1; }
@@ -58,11 +57,14 @@ escape_xml() {
   echo "$1" | sed -e "s/\&/\&amp;/g;s/'/\&apos;/g"
 }
 
-BASE_URL="http://www.ardmediathek.de/tv/sendungen-a-z?sendungsTyp=sendung"
+SRC_URL="http://www.ardmediathek.de/tv/sendungen-a-z?sendungsTyp=sendung"
+
+DST="pub/series/index.opml"
+mkdir -p "$(dirname "$DST")" 2>/dev/null
 
 {
   cat <<EOF
-<?xml-stylesheet type="text/xsl" href="../assets/opml2html.xslt"?>
+<?xml-stylesheet type="text/xsl" href="../../assets/opml2html.xslt"?>
 <opml version='2.0' xmlns:a='http://www.w3.org/2005/Atom'>
   <!-- 
     Lizenz: CC BY-SA 3.0 DE
@@ -70,19 +72,19 @@ BASE_URL="http://www.ardmediathek.de/tv/sendungen-a-z?sendungsTyp=sendung"
   <!-- 
     <a:link rel='license'>http://creativecommons.org/licenses/by-sa/3.0/de/</a:link>
     <a:link rel='self'>$OPML_URL</a:link>
-    <a:link rel='via'>$BASE_URL</a:link>
+    <a:link rel='via'>$SRC_URL</a:link>
     <a:link rel='hub'>$PUBSUBHUBBUB_URL</a:link>
     validates against https://raw.githubusercontent.com/mro/opml-schema/hotfix/typo/schema.rng
   -->
   <head>
-    <title>ARD Mediathek Atom Feeds</title>
+    <title>ARD Mediathek Sendungen</title>
     <!-- <dateCreated/> see file timestamp -->
     <ownerId>http://purl.mro.name/mediathek</ownerId>
   </head>
   <body>
 EOF
 
-  for letter_url_ in $(curl --silent --url "$BASE_URL" | egrep -hoe 'href="/(radio|tv)/sendungen-a-z\?sendungsTyp=sendung&amp;buchstabe=[^"]+' | cut -c 7- | sort | uniq)
+  for letter_url_ in $(curl --silent --url "$SRC_URL" | egrep -hoe 'href="/(radio|tv)/sendungen-a-z\?sendungsTyp=sendung&amp;buchstabe=[^"]+' | cut -c 7- | sort | uniq)
   do
     printf "%s" '*' 1>&2
     letter_url="http://www.ardmediathek.de$letter_url_"
@@ -91,16 +93,17 @@ EOF
 
     xsltproc --html bin/series2opml.xslt "$(unescape_xml "$letter_url")" 2>/dev/null \
     | sed -e "s/\&/\&amp;/g;s/'/\&apos;/g" \
-    | while read series_url_ title
+    | while read station_name_ series_url_ title
     do
       printf "%s" '.' 1>&2
       series_url="http://www.ardmediathek.de$series_url_"
       bcastId="$(echo "$series_url_" | egrep -hoe 'bcastId=[0-9]+' | cut -c 9-)"
-      printf "    <outline language='de' text='%s' type='rss' version='atom' htmlUrl='%s'" "$title" "$series_url"
-      [ ! -f "pub/feeds/$bcastId/feed.atom" ] || {
+      printf "    <outline type='rss' text='%s' category='%s'" "$title" "$BASE_URL/ardmediathek.de/station/$station_name_"
+      [ ! -f "pub/series/$bcastId/feed.atom" ] || {
         printf " xmlUrl='%s/feed.atom'" "$bcastId"
-        printf " title='%d'" "$(xmllint --xpath 'count(/*/*[local-name()="entry"])' "pub/feeds/$bcastId/feed.atom")"
+        printf " title='%d'" "$(xmllint --xpath 'count(/*/*[local-name()="entry"])' "pub/series/$bcastId/feed.atom")"
       }
+      printf " language='de' version='atom' htmlUrl='%s'"  "$series_url"
       printf "/>\n"
 
       # reihe_url="http://www.ardmediathek.de$reihe_url_&amp;rss=true"

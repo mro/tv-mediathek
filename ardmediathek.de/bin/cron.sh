@@ -51,6 +51,7 @@ shasum cache/feeds/*/feed.rss > cache/feeds.sha
 sh bin/create-feeds-opml.sh
 
 ## deploy ...
+# lftp, rsync, whatever
 
 shasum --check pub/feeds.sha \
   | grep "/feed.atom: FAILED" \

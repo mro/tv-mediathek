@@ -12,7 +12,7 @@ Zunächst ARD, schrittweise (aber evtl. langsam) mehr.
 
 Webserver: Nur statische Dateien mit Metadaten (keine Videos).
 
-Server: cron, dash-Skripte, debian sqeeze mit möglichst wenigen Abhängigkeiten.
+Server: cron, dash-Skripte, debian wheezy mit möglichst wenigen Abhängigkeiten.
 
 Siehe [Installation](#installation) unten.
 
@@ -110,9 +110,9 @@ Später evtl.
     $ mkdir $HOME/Documents && cd $HOME/Documents
     $ git clone https://github.com/mro/tv-mediathek.git && cd tv-mediathek/ardmediathek.de/bin
     $ vim create-feeds-opml.settings
-    $ vim hourly.sh
+    $ vim cron.sh
     $ crontab -e
-    15,45 * * * * cd $HOME/Documents/tv-mediathek/ardmediathek.de && nice sh bin/hourly.sh 1> tmp/stdout.log 2> tmp/stderr.log
+    15,45 * * * * cd $HOME/Documents/tv-mediathek/ardmediathek.de && nice sh bin/cron.sh 1> tmp/stdout.log 2> tmp/stderr.log
 
 ## Beispiel
 

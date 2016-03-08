@@ -71,7 +71,6 @@ li.ghost {
       <h1 id="top"><xsl:value-of select="head/title"/></h1>
 
       <p>
-        <img src="../../assets/atomenabled.svg" alt="AtomEnabled Logo"/>
         <a href="https://de.wikipedia.org/wiki/Atom_%28Format%29">Wikipedia: Atom (Format)</a>
       </p>
 
@@ -80,7 +79,7 @@ li.ghost {
   "border-width:0" src="http://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg"
   alt="Creative Commons Lizenzvertrag" /></a><br />
   "<span rel="dct:type" property="dct:title" href="http://purl.org/dc/dcmitype/Text" xmlns:dct=
-  "http://purl.org/dc/terms/">Mediathek Meta Maschine Feeds</span>" von <a rel="cc:attributionURL"
+  "http://purl.org/dc/terms/">ARD Mediathek Atom Feeds</span>" von <a rel="cc:attributionURL"
   property="cc:attributionName" href=
   "http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/feeds/index.opml" xmlns:cc=
   "http://creativecommons.org/ns#">Marcus Rohrmoser</a> ist lizenziert unter einer <a rel="license"

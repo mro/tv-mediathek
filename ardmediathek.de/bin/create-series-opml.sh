@@ -22,6 +22,7 @@
 # THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 cd "$(dirname "$0")/.."
+printf "%s" "$(basename "$0") "
 
 ######################################################################
 ## Scrape ardmediathek.de for RSS feeds and build a OPML summary.
@@ -55,19 +56,19 @@ file_time() {
 }
 
 SRC_URL="http://www.ardmediathek.de/tv/sendungen-a-z?sendungsTyp=sendung"
-
 DST="pub/series/index.opml"
 printf "%s" "$DST "
+
 mkdir -p "$(dirname "$DST")" 2>/dev/null
 
 {
   cat <<EOF
 <?xml-stylesheet type="text/xsl" href="../../assets/opml2html.xslt"?>
 <opml version='2.0' xmlns:a='http://www.w3.org/2005/Atom' xmlns:dct='http://purl.org/dc/terms/'>
-  <!-- 
+  <!--
     Lizenz: CC BY-SA 3.0 DE
   -->
-  <!-- 
+  <!--
     <a:link rel='license'>http://creativecommons.org/licenses/by-sa/3.0/de/</a:link>
     <a:link rel='self'>$OPML_URL</a:link>
     <a:link rel='via'>$SRC_URL</a:link>

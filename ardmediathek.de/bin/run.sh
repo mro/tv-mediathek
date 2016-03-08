@@ -33,6 +33,9 @@ which xargs >/dev/null          || { echo "I need xargs" && exit 1; }
 ruby --version >/dev/null       || { echo "I need ruby 1.8.7 or higher" && exit 1; }
 # lftp --version >/dev/null       || { echo "I need lftp" && exit 1; }
 
+# cleanup a bit:
+grep -l "&amp;amp;" pub/series/*/feed.atom | head -n 5 | xargs rm
+
 # download (cache) RSS candidates
 url_pattern='http://www.ardmediathek.de/export/rss/id={}'
 # url_pattern='http://www.ardmediathek.de/tv/Tatort/Sendung?documentId={}&rss=true'

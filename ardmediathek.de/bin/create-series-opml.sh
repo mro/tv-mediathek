@@ -27,12 +27,10 @@ cd "$(dirname "$0")/.."
 ## Scrape ardmediathek.de for RSS feeds and build a OPML summary.
 ######################################################################
 
-DST="pub/feeds/index.opml"
-
-SETTINGS_FILE="bin/$(basename "$0" .sh).settings"
+SETTINGS_FILE="../run.config"
 [ -f "$SETTINGS_FILE" ] || { echo "I need a $(pwd)/$SETTINGS_FILE" && exit 1; }
 . "$SETTINGS_FILE"
-[ "$OPML_URL" != "" ] || { echo "OPML_URL must be set in $(pwd)/$SETTINGS_FILE" && exit 1; }
+[ "$BASE_URL" != "" ] || { echo "BASE_URL must be set in $(pwd)/$SETTINGS_FILE" && exit 1; }
 
 # Check preliminaries
 curl --version >/dev/null       || { echo "I need curl." && exit 1; }
@@ -45,11 +43,6 @@ shasum --version > /dev/null    || { echo "I need shasum." && exit 1; }
 # ~17000 Episodes (~25 Episodes per Series)
 
 [ "$TMP" != "" ] || TMP="tmp"
-RELAXNG_SCHEMA_URL='https://raw.githubusercontent.com/mro/opml-schema/hotfix/typo/schema.rng'
-RELAXNG_SCHEMA="$TMP/opml.rng"
-[ -f "$RELAXNG_SCHEMA" ] \
-|| curl --location --remote-time --time-cond "$RELAXNG_SCHEMA" --output "$RELAXNG_SCHEMA" --url "$RELAXNG_SCHEMA_URL" \
-|| { echo "Failed to download mandatory RelaxNG schema from $RELAXNG_SCHEMA_URL" && exit 1; }
 
 unescape_xml() {
   echo "$1" | sed -e 's/\&amp;/\&/g'
@@ -57,32 +50,39 @@ unescape_xml() {
 escape_xml() {
   echo "$1" | sed -e "s/\&/\&amp;/g;s/'/\&apos;/g"
 }
+file_time() {
+  ls -l --full-time "$1" | cut -c 28-62
+}
 
-BASE_URL="http://www.ardmediathek.de/tv/sendungen-a-z?sendungsTyp=sendung"
+SRC_URL="http://www.ardmediathek.de/tv/sendungen-a-z?sendungsTyp=sendung"
+
+DST="pub/series/index.opml"
+printf "%s" "$DST "
+mkdir -p "$(dirname "$DST")" 2>/dev/null
 
 {
   cat <<EOF
-<?xml-stylesheet type="text/xsl" href="../assets/opml2html.xslt"?>
-<opml version='2.0' xmlns:a='http://www.w3.org/2005/Atom'>
+<?xml-stylesheet type="text/xsl" href="../../assets/opml2html.xslt"?>
+<opml version='2.0' xmlns:a='http://www.w3.org/2005/Atom' xmlns:dct='http://purl.org/dc/terms/'>
   <!-- 
     Lizenz: CC BY-SA 3.0 DE
   -->
   <!-- 
     <a:link rel='license'>http://creativecommons.org/licenses/by-sa/3.0/de/</a:link>
     <a:link rel='self'>$OPML_URL</a:link>
-    <a:link rel='via'>$BASE_URL</a:link>
+    <a:link rel='via'>$SRC_URL</a:link>
     <a:link rel='hub'>$PUBSUBHUBBUB_URL</a:link>
     validates against https://raw.githubusercontent.com/mro/opml-schema/hotfix/typo/schema.rng
   -->
   <head>
-    <title>ARD Mediathek Atom Feeds</title>
+    <title>ARD Mediathek Sendungen</title>
     <!-- <dateCreated/> see file timestamp -->
     <ownerId>http://purl.mro.name/mediathek</ownerId>
   </head>
   <body>
 EOF
 
-  for letter_url_ in $(curl --silent --url "$BASE_URL" | egrep -hoe 'href="/(radio|tv)/sendungen-a-z\?sendungsTyp=sendung&amp;buchstabe=[^"]+' | cut -c 7- | sort | uniq)
+  for letter_url_ in $(curl --silent --url "$SRC_URL" | egrep -hoe 'href="/(radio|tv)/sendungen-a-z\?sendungsTyp=sendung&amp;buchstabe=[^"]+' | cut -c 7- | sort | uniq)
   do
     printf "%s" '*' 1>&2
     letter_url="http://www.ardmediathek.de$letter_url_"
@@ -91,12 +91,18 @@ EOF
 
     xsltproc --html bin/series2opml.xslt "$(unescape_xml "$letter_url")" 2>/dev/null \
     | sed -e "s/\&/\&amp;/g;s/'/\&apos;/g" \
-    | while read series_url_ title
+    | while read station_name_ series_url_ title
     do
       printf "%s" '.' 1>&2
       series_url="http://www.ardmediathek.de$series_url_"
       bcastId="$(echo "$series_url_" | egrep -hoe 'bcastId=[0-9]+' | cut -c 9-)"
-      echo "    <outline language='de' text='$title' type='rss' version='atom' htmlUrl='$series_url' xmlUrl='$bcastId/feed.atom'/>"
+      printf "    <outline type='rss' text='%s' category='%s'" "$title" "$BASE_URL/ardmediathek.de/station/$station_name_"
+      [ ! -f "pub/series/$bcastId/feed.atom" ] || {
+        printf " xmlUrl='%s/feed.atom'" "$bcastId"
+        printf " title='%d / %s'" "$(xmllint --xpath 'count(/*/*[local-name()="entry"])' "pub/series/$bcastId/feed.atom")" "$(file_time "pub/series/$bcastId/feed.atom")"
+      }
+      printf " language='de' version='atom' htmlUrl='%s'"  "$series_url"
+      printf "/>\n"
 
       # reihe_url="http://www.ardmediathek.de$reihe_url_&amp;rss=true"
       # <a class="mediaLink" href="/tv/FilmMittwoch-im-Ersten/Meister-des-Todes-H%C3%B6rfassung-Video-tg/Das-Erste/Video?documentId=30734576&amp;bcastId=10318946">
@@ -120,7 +126,7 @@ EOF
 </opml>
 EOF
 } \
-| xmllint --format --encode utf8 --relaxng "$RELAXNG_SCHEMA" --output "$DST~" - \
+| xmllint --format --encode utf8 --output "$DST~" - \
 || { echo "ouch" 1>&2 && exit 101; }
 
 mv "$DST~" "$DST"

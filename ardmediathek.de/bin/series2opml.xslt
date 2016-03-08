@@ -34,6 +34,8 @@
     <apply-templates select="//div[@class='wrapper']/div[contains(@class,'section')]//a[@class='textLink']/h4[@class='headline']"/>
   </template>
   <template match="h4">
-    <value-of select="normalize-space(../@href)"/><text> </text><value-of select="."/><text>&#10;</text>
+    <value-of select="translate(normalize-space(following-sibling::p[@class='subtitle']), ' ', '_')"/><text> </text>
+    <value-of select="normalize-space(../@href)"/><text> </text>
+    <value-of select="."/><text>&#10;</text>
   </template>
 </stylesheet>

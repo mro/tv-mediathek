@@ -23,7 +23,7 @@
 #
 require 'uri'
 
-BASE_URL = URI::parse 'http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/feeds/'
+BASE_URL = URI::parse 'http://linkeddata.mro.name/open/tv/mediathek/ardmediathek.de/series/'
 PUBSUBHUBBUB_URL = nil
 
 # http://ruby-doc.org/stdlib-1.8.7/libdoc/rexml/rdoc/REXML/Document.html
@@ -62,10 +62,11 @@ def decode_json_via_yaml_postprocess s
   s.gsub(', ', ',').gsub(': ', ':')
 end
 
-def fetch_mp4_url p, entryId, quality
+def fetch_mp4_url p, entryId
   $stderr.write '^'
+  json_uri = URI::parse("http://www.ardmediathek.de/play/media/#{entryId}")
   begin
-    js = decode_json_via_yaml( Timeout::timeout(10){open(URI::parse("http://www.ardmediathek.de/play/media/#{entryId}"))}.read )
+    js = decode_json_via_yaml( Timeout::timeout(10){open(json_uri)}.read )
 
     p.add_text_element 'tl:durationInt', js['_duration'] unless js['_duration'].nil?
 
@@ -81,8 +82,8 @@ def fetch_mp4_url p, entryId, quality
           next if url.end_with? '.f4m'
           url = decode_json_via_yaml_postprocess(url)
           begin
-            mp4url = URI::parse url
-            ret << {'href'=>mp4url.to_s, 'rel'=>'enclosure', 'type'=>'video/mp4', 'title'=>"q-#{mediaStream['_quality']}"}
+            mp4url = URI::parse url.gsub('&amp;','&')
+            ret << {'href'=>mp4url, 'rel'=>'enclosure', 'type'=>'video/mp4', 'title'=>"q-#{mediaStream['_quality']}"}
           rescue URI::InvalidURIError => e
             # $stderr.puts "Strange URI: '#{url}'"
           end
@@ -91,10 +92,12 @@ def fetch_mp4_url p, entryId, quality
     end
     ret.sort{|a,b| b['title'] <=> a['title'] }.uniq.each{|atts| p.add_element 'link', atts}
   rescue Timeout::Error
+  rescue Psych::SyntaxError => e
+    $stderr.puts "\njson_uri: #{json_uri} #{e}\n"
   end
 end
 
-if 0 == ARGV.count
+if 1 == ARGV.count && ('-h' == ARGV[0])
 then
   puts <<EOF
 - Fetch ardmediathek.de RSS feeds,
@@ -114,7 +117,7 @@ end
 def process_feed bcastId
   # load existing Atom (result) feed
   bcastId = bcastId.to_s
-  atom_file_name = File.join('pub','feeds',bcastId,'feed.atom')
+  atom_file_name = File.join('pub','series',bcastId,'feed.atom')
   old_atom_index = {}
   old_atom = begin
     feed = File.open(atom_file_name, 'r'){|f| REXML::Document.new(f)}
@@ -124,7 +127,7 @@ def process_feed bcastId
 
   # load RSS (cached source) feed
   rss_uri = URI::parse("http://www.ardmediathek.de/export/rss/id=#{bcastId}")
-  rss_file = File.join('cache','feeds',bcastId,'feed.rss')  
+  rss_file = File.join('cache','series',bcastId,'feed.rss')
   $stderr.write "\n#{rss_file} "
   current_rss = begin
     File.open(rss_file, 'r'){|f| REXML::Document.new(f)}
@@ -152,7 +155,7 @@ ATOM_XML
   new_feed.add_element('author').add_text_element('name', current_rss.elements['/rss/channel/copyright'].text)
   new_feed.add_element 'link', {'rel'=>'self', 'type'=>'application/atom+xml', 'href'=>atom_uri}
   new_feed.add_element 'link', {'rel'=>'alternate', 'type'=>'application/rss+xml', 'href'=>rss_uri}
-  new_feed.add_element 'link', {'rel'=>'alternate', 'type'=>'text/html', 'href'=>URI::parse("http://www.ardmediathek.de/tv/.../Sendung?documentId=#{bcastId}&amp;bcastId=#{bcastId}")}
+  new_feed.add_element 'link', {'rel'=>'alternate', 'type'=>'text/html', 'href'=>URI::parse("http://www.ardmediathek.de/tv/.../Sendung?documentId=#{bcastId}&bcastId=#{bcastId}")}
   new_feed.add_element 'link', {'rel'=>'hub', 'href'=>PUBSUBHUBBUB_URL} unless PUBSUBHUBBUB_URL.nil?
   current_rss.elements.each('/rss/channel/item') do |item|
     $stderr.write '.'
@@ -161,10 +164,10 @@ ATOM_XML
     entryId = /documentId=(\d+)/.match(url.to_s)[1]
     tag = "tag:ardmediathek.de,2015:documentId=#{entryId}"
     new_entry = new_feed.add_text_element 'entry'
-    new_entry.add_element 'link', {'rel'=>'via', 'type'=>'text/html', 'href'=>url.to_s.to_xml}
+    new_entry.add_element 'link', {'rel'=>'alternate', 'type'=>'text/html', 'href'=>url}
     new_entry.add_text_element 'id', tag
     new_entry.add_text_element 'title', item.elements['title'].text
-    new_entry.add_text_element 'content', item.elements['description'].text
+    new_entry.add_text_element 'summary', item.elements['description'].text
     new_entry.add_text_element 'updated', item.elements['pubDate'].text.rfc822_to_iso8601
 
     # re-use old atom entry/link[@rel='enclosure']
@@ -176,7 +179,7 @@ ATOM_XML
       end
       old_entry.remove
     end
-    fetch_mp4_url(new_entry, entryId, 3) if encl.nil?
+    fetch_mp4_url(new_entry, entryId) if encl.nil?
   end
 
   FileUtils.mkdir_p File.dirname(atom_file_name)
@@ -184,7 +187,7 @@ ATOM_XML
 end
 
 ARGV.each.collect do |id_raw|
-  m = /cache\/feeds\/([0-9]+)\/feed.rss/.match(id_raw)
+  m = /cache\/series\/([0-9]+)\/feed.rss/.match(id_raw)
   if m.nil?
     m = /^(?:.*?bcastId=)?([0-9]+).*?/.match(id_raw)
     raise "What a strange id: '#{id_raw}'" if m.nil?

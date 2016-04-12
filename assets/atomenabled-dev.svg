@@ -18,7 +18,7 @@
    inkscape:version="0.91 r13725"
    sodipodi:docname="atomenabled-dev.svg">
   <title
-     id="title4456">Logo atomenabled.org</title>
+     id="title4456">AtomEnabled.org Logo</title>
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -28,20 +28,20 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1"
-     inkscape:cx="-17.13624"
-     inkscape:cy="14.108259"
+     inkscape:zoom="3.7935776"
+     inkscape:cx="90.211003"
+     inkscape:cy="40.500001"
      inkscape:document-units="px"
-     inkscape:current-layer="svg2"
+     inkscape:current-layer="text0"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1280"
-     inkscape:window-height="980"
-     inkscape:window-x="229"
-     inkscape:window-y="0"
+     inkscape:window-width="1631"
+     inkscape:window-height="1005"
+     inkscape:window-x="49"
+     inkscape:window-y="1"
      inkscape:window-maximized="1"
      showguides="true"
      inkscape:guide-bbox="true" />
@@ -53,7 +53,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title>Logo atomenabled.org</dc:title>
+        <dc:title>AtomEnabled.org Logo</dc:title>
         <dc:date>2015-09-30</dc:date>
         <dc:creator>
           <cc:Agent>
@@ -65,18 +65,22 @@
             <dc:title />
           </cc:Agent>
         </dc:publisher>
-        <dc:source>http://atomenabled.org/wp-content/uploads/2013/12/logo.png</dc:source>
+        <dc:source>http://AtomEnabled.org/wp-content/uploads/2013/12/logo.png</dc:source>
         <dc:contributor>
           <cc:Agent>
-            <dc:title>Marcus Rohrmoser</dc:title>
+            <dc:title>Marcus Rohrmoser, http://mro.name/me</dc:title>
           </cc:Agent>
         </dc:contributor>
         <dc:language>en</dc:language>
         <dc:subject>
           <rdf:Bag>
-            <rdf:li>logo</rdf:li>
+            <rdf:li>Atom</rdf:li>
+            <rdf:li>Feed</rdf:li>
+            <rdf:li>Logo</rdf:li>
+            <rdf:li>SVG</rdf:li>
           </rdf:Bag>
         </dc:subject>
+        <dc:relation>http://intertwingly.net/blog/2010/04/15/HTML-to-Atom</dc:relation>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -160,9 +164,9 @@
   </g>
   <g
      inkscape:groupmode="layer"
-     id="graphics"
-     inkscape:label="graphics"
-     style="display:inline"
+     id="graphics0"
+     inkscape:label="graphics0"
+     style="display:none"
      sodipodi:insensitive="true">
     <ellipse
        style="display:inline;fill:none;fill-opacity:1;stroke:#83a2c0;stroke-width:1.50000012;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
@@ -333,7 +337,7 @@
      inkscape:groupmode="layer"
      id="text0"
      inkscape:label="Text"
-     style="display:none;opacity:0.75"
+     style="display:inline;opacity:0.75"
      sodipodi:insensitive="true">
     <text
        xml:space="preserve"
@@ -348,7 +352,7 @@
          y="40.709476">AtomEnabled</tspan></text>
   </g>
   <g
-     style="display:inline;opacity:0.75"
+     style="display:none;opacity:0.75"
      inkscape:label="Text (paths)"
      id="text1"
      inkscape:groupmode="layer"
@@ -416,5 +420,75 @@
        preserveAspectRatio="none"
        height="81"
        width="211" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="intertwingly"
+     inkscape:label="http://intertwingly.net/blog/2010/04/15/HTML-to-Atom"
+     sodipodi:insensitive="true"
+     style="display:inline">
+    <g
+       id="g4254"
+       transform="matrix(0.69387701,0,0,0.69381403,41.000019,41.97223)"
+       style="stroke-width:2.8824861">
+      <g
+         id="g4256"
+         style="fill:none">
+        <ellipse
+           rx="6"
+           ry="44"
+           id="ellipse4258"
+           cx="0"
+           cy="0"
+           style="stroke:#66899a" />
+        <ellipse
+           rx="6"
+           ry="44"
+           transform="matrix(0.40673664,-0.91354546,0.91354546,0.40673664,0,0)"
+           id="ellipse4260"
+           cx="0"
+           cy="0"
+           style="stroke:#e1d85d" />
+        <ellipse
+           rx="6"
+           ry="44"
+           transform="matrix(0.40673664,0.91354546,-0.91354546,0.40673664,0,0)"
+           id="ellipse4262"
+           cx="0"
+           cy="0"
+           style="stroke:#80a3cf" />
+        <circle
+           r="44"
+           id="circle4264"
+           cx="0"
+           cy="0"
+           style="stroke:#4b541f" />
+      </g>
+      <g
+         id="g4266"
+         style="fill:#66899a;stroke:#ffffff">
+        <circle
+           r="13"
+           id="circle4268"
+           cx="0"
+           cy="0"
+           style="fill:#80a3cf" />
+        <circle
+           cy="-44"
+           r="9"
+           id="circle4271"
+           cx="0" />
+        <circle
+           cx="-40"
+           cy="18"
+           r="9"
+           id="circle4273" />
+        <circle
+           cx="40"
+           cy="18"
+           r="9"
+           id="circle4275" />
+      </g>
+    </g>
   </g>
 </svg>

@@ -34,7 +34,7 @@
 
   <xsl:template match="/">
     <xsl:value-of select="$base_url"/><xsl:text> Das Erste&#10;</xsl:text>
-    <xsl:for-each select="/html/body//a[starts-with(@href, concat($base_url,'&amp;kanal='))]">
+    <xsl:for-each select="/html//a[starts-with(@href, concat($base_url,'&amp;kanal='))]">
       <xsl:value-of select="@href"/><xsl:text> </xsl:text>
       <xsl:value-of select="normalize-space(.)"/><xsl:text>&#10;</xsl:text>
     </xsl:for-each>

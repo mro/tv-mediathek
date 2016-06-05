@@ -23,7 +23,7 @@
 --> 
 <!--
 
-  $ xsltproc - -html bin/recent-clips.xslt "http://www.ardmediathek.de/tv/sendungVerpasst?tag=0"
+  $ xsltproc - -html bin/recent-series.xslt "http://www.ardmediathek.de/tv/sendungVerpasst?tag=0"
   
   return url + title per line
 -->
@@ -36,7 +36,7 @@
       <xsl:text>. </xsl:text>
       <xsl:value-of select="$station_name"/><xsl:text>&#10;</xsl:text>
     -->
-    <xsl:for-each select="/html/body//div[@class='teaser' and ../../../h3//span/@class='date']">
+    <xsl:for-each select="/html//div[@class='teaser' and ../../../h3//span/@class='date']">
       <xsl:value-of select="normalize-space(../../../h3//span[@class='date'])"/><xsl:text> </xsl:text>
       <xsl:value-of select=".//a[@class='textLink']/@href"/><xsl:text> </xsl:text>
       <xsl:value-of select="normalize-space(.//h4[@class='headline'])"/><xsl:text>&#10;</xsl:text>

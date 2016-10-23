@@ -145,6 +145,7 @@ Später evtl.
 
 - https://github.com/xaverW/MediathekView
 - https://web.archive.org/web/20121210030455/http://appdrive.net/mediathek/
+- https://github.com/rg3/youtube-dl/
 - http://purl.mro.name/radio-pi/
 - https://github.com/raptor2101/Mediathek
 - https://github.com/michaelw/mediathek-dl
